@@ -1,0 +1,19 @@
+plugins {
+    id 'base'
+}
+
+allprojects {
+    group = 'com.duddlejump'
+    version = appVersion
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.release = 17
+    }
+}

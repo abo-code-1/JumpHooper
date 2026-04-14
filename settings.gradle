@@ -1,0 +1,3 @@
+rootProject.name = "DuddleJump"
+
+include("core", "desktop")
