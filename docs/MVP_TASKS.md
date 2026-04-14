@@ -1,91 +1,126 @@
 # DuddleJump — MVP Tasks (Java / libGDX)
 
-Split **5 / 5** across Abror and Ivan. Tracked on ClickUp in the "JumpHooper – Task management" space (list id `901816969291`).
+Split into **20 small, single-scope tasks** — 9 for Ivan, 11 for Abror. Each is sized to a 1–2 hour chunk so they're easy to pick up, finish, and close.
 
-> ⚠ **Heads-up:** the ClickUp task *descriptions* still reference the old Tiny.js scaffold (src/Doodle.js, Tiny.Sprite, etc.). The file names and patterns below are the libGDX mapping — re-open and edit each ClickUp task to match, or ask Claude to sync them.
-
----
-
-## Abror — Gameplay engine
-
-| # | Task | Pattern | libGDX file(s) | Priority | ClickUp |
-|---|---|---|---|---|---|
-| A1 | Doodle character: physics & movement | Strategy (via `InputController`) | `core/src/com/duddlejump/entities/Doodle.java`, `Config.java` | high | [86ex8a4pc](https://app.clickup.com/t/86ex8a4pc) |
-| A2 | Platform system (green / red / blue / white) | Factory Method + Strategy | `entities/Platform.java` + 4 subclasses, `factories/PlatformFactory.java` | high | [86ex8a4pu](https://app.clickup.com/t/86ex8a4pu) |
-| A3 | Collision detection & contact events | Observer | `entities/Doodle.checkContact`, `events/EventBus.java`, `events/ContactListener.java` | high | [86ex8a4q5](https://app.clickup.com/t/86ex8a4q5) |
-| A4 | Camera scroll & platform spawning | — | `screens/GameScreen.java` (camera logic), `entities/PlatformSpawner.java` | normal | [86ex8a4qd](https://app.clickup.com/t/86ex8a4qd) |
-| A5 | Game state machine (playing / paused / game-over) | State | `state/GameState.java`, `state/PlayingState.java`, `state/PausedState.java`, `state/GameOverState.java` | normal | [86ex8a4r4](https://app.clickup.com/t/86ex8a4r4) |
-
-## Ivan — Flow, UI, persistence
-
-| # | Task | Pattern | libGDX file(s) | Priority | ClickUp |
-|---|---|---|---|---|---|
-| I1 | Main menu screen: title & Play button | — | `screens/MainMenuScreen.java` (Scene2D `Stage` + `TextButton`) | high | [86ex8a4rw](https://app.clickup.com/t/86ex8a4rw) |
-| I2 | Game-over screen: score display & Restart | — | `screens/GameOverScreen.java` | high | [86ex8a4t9](https://app.clickup.com/t/86ex8a4t9) |
-| I3 | Score manager with persistent high score | Singleton | `managers/ScoreManager.java` (enum singleton + `Preferences`) | high | [86ex8a4tx](https://app.clickup.com/t/86ex8a4tx) |
-| I4 | Asset pipeline & loading screen | — | `managers/Assets.java` (wraps `AssetManager`), `screens/LoadingScreen.java`, `assets/` | normal | [86ex8a4v2](https://app.clickup.com/t/86ex8a4v2) |
-| I5 | Input controllers: keyboard + accelerometer | Adapter | `input/InputController.java`, `input/KeyboardInputController.java`, `input/AccelerometerInputController.java` | normal | [86ex8a4v7](https://app.clickup.com/t/86ex8a4v7) |
+Tracked on ClickUp in the **"JumpHooper – Task management"** space, list id `901816969291`.
 
 ---
 
-## Critical path
+## Ivan — Flow / UI / persistence (9 tasks)
 
-```
-(I4) Asset pipeline          (A2) Platform factory
-        │                            │
-        ├────────┬───────────────────┤
-        │        │                   │
-        ▼        ▼                   │
-  (I1) Menu   (I5) Input             │
-                │                    │
-                ▼                    │
-        (A1) Doodle physics ◄────────┘
-                │
-                ▼
-        (A3) Collision + EventBus
-                │
-                ▼
-        (I3) ScoreManager
-                │
-                ▼
-        (A4) Camera scroll
-                │
-                ▼
-        (A5) Game state machine
-                │
-                ▼
-        (I2) Game-over screen
-```
+| # | Task | Pattern | Priority | ClickUp |
+|---|---|---|---|---|
+| I01 | Set up libGDX Gradle project | — | urgent | [86ex8aaye](https://app.clickup.com/t/86ex8aaye) |
+| I02 | Wrap AssetManager in `Assets.java` | — | high | [86ex8aay6](https://app.clickup.com/t/86ex8aay6) |
+| I03 | Loading screen with progress bar | — | normal | [86ex8aayb](https://app.clickup.com/t/86ex8aayb) |
+| I04 | Main menu screen | — | high | [86ex8aaym](https://app.clickup.com/t/86ex8aaym) |
+| I05 | Game over screen | — | high | [86ex8aaya](https://app.clickup.com/t/86ex8aaya) |
+| I06 | `ScoreManager` singleton (current score) | **Singleton** | high | [86ex8aayh](https://app.clickup.com/t/86ex8aayh) |
+| I07 | `ScoreManager` high-score persistence | — | normal | [86ex8aayc](https://app.clickup.com/t/86ex8aayc) |
+| I08 | Keyboard input controller | **Adapter + Strategy** | high | [86ex8aayn](https://app.clickup.com/t/86ex8aayn) |
+| I09 | Accelerometer input controller | **Adapter** | normal | [86ex8aayp](https://app.clickup.com/t/86ex8aayp) |
 
-**First sprint (parallel):** I4 (Ivan) + A2 (Abror).
-**Second sprint:** I5 → A1; then A3; then I3, A4, A5, I2 fan out.
+## Abror — Gameplay engine (11 tasks)
+
+| # | Task | Pattern | Priority | ClickUp |
+|---|---|---|---|---|
+| A01 | `DuddleJumpGame` class + `Config` | — | urgent | [86ex8aay3](https://app.clickup.com/t/86ex8aay3) |
+| A02 | Doodle sprite rendering | — | high | [86ex8aay9](https://app.clickup.com/t/86ex8aay9) |
+| A03 | Doodle physics | — | high | [86ex8aay8](https://app.clickup.com/t/86ex8aay8) |
+| A04 | `Platform` abstract base class | — | high | [86ex8aay7](https://app.clickup.com/t/86ex8aay7) |
+| A05 | Green + Red platforms | **Strategy** | high | [86ex8aayd](https://app.clickup.com/t/86ex8aayd) |
+| A06 | Blue + White platforms | **Strategy** | normal | [86ex8aayk](https://app.clickup.com/t/86ex8aayk) |
+| A07 | `PlatformFactory` | **Factory Method** | high | [86ex8aayj](https://app.clickup.com/t/86ex8aayj) |
+| A08 | `EventBus` + `ContactListener` | **Observer** | high | [86ex8aay5](https://app.clickup.com/t/86ex8aay5) |
+| A09 | Collision detection | — | high | [86ex8aayf](https://app.clickup.com/t/86ex8aayf) |
+| A10 | Platform spawning + camera scroll | — | normal | [86ex8aay4](https://app.clickup.com/t/86ex8aay4) |
+| A11 | Game state machine | **State** | normal | [86ex8aayg](https://app.clickup.com/t/86ex8aayg) |
 
 ---
 
-## Status definitions (JumpHooper space)
+## Recommended order
 
-| Status | When to use |
+### Sprint 1 — bootstrap (parallel, no cross-blocking)
+
+| Ivan | Abror |
 |---|---|
-| **to do** | Default on creation |
-| **planning** | Class sketch / design notes before code |
-| **in progress** | Actively implementing |
-| **at risk** | Blocker discovered, may slip |
-| **update required** | Teammate pinged for input |
-| **on hold** | Intentionally paused |
-| **complete** | Merged to `main` + smoke-tested |
-| **cancelled** | De-scoped for MVP |
+| **I01** Gradle project | **A01** `DuddleJumpGame` + `Config` |
+| **I02** Assets wrapper | **A02** Doodle sprite rendering |
+
+### Sprint 2 — first playable loop
+
+| Ivan | Abror |
+|---|---|
+| **I04** Main menu | **A04** Platform base + **A05** Green/Red |
+| **I08** Keyboard input | **A07** PlatformFactory |
+| **I06** ScoreManager (current) | **A03** Doodle physics |
+
+### Sprint 3 — full gameplay
+
+| Ivan | Abror |
+|---|---|
+| **I03** Loading screen | **A08** EventBus + **A09** Collision |
+| **I05** Game over screen | **A06** Blue/White platforms |
+| **I07** High-score persistence | **A10** Spawning + camera |
+| **I09** Accelerometer | **A11** State machine |
+
+## Week plan — Tuesday, April 14, 2026 to Saturday, April 18, 2026
+
+| Date | Ivan | Abror |
+|---|---|---|
+| Tue, Apr 14 | **I01** Gradle project, **I02** Assets wrapper | **A01** `DuddleJumpGame` + `Config`, **A02** Doodle sprite rendering |
+| Wed, Apr 15 | **I04** Main menu, **I08** Keyboard input | **A03** Doodle physics, **A04** Platform base |
+| Thu, Apr 16 | **I06** ScoreManager current score, **I03** Loading screen | **A05** Green + Red platforms, **A07** PlatformFactory |
+| Fri, Apr 17 | **I05** Game over screen, **I07** High-score persistence | **A08** EventBus + `ContactListener`, **A09** Collision detection |
+| Sat, Apr 18 | **I09** Accelerometer input | **A10** Platform spawning + camera scroll, **A06** Blue + White platforms, **A11** Game state machine |
 
 ---
+
+## Dependency map (critical path)
+
+```
+  I01 (Gradle)
+     │
+     └──► A01 (Game+Config) ──► A02 (Doodle render) ──► A03 (Doodle physics)
+                                                              │
+  I02 (Assets) ──► I03 (Loading) ──► I04 (Menu)               │
+                                       │                       │
+  I08 (Keyboard) ────────────────────► │                       │
+                                       ▼                       ▼
+                                      [game loop starts]  A04 (Platform base)
+                                                               │
+                                                               ▼
+                                                          A05 (Green/Red) + A07 (Factory)
+                                                               │
+                                                               ▼
+                                                          A08 (EventBus) + A09 (Collision)
+                                                               │
+                                                               ▼
+                                                          I06 (Score) ──► I07 (Persistence)
+                                                               │
+                                                               ▼
+                                                          A10 (Scroll) + A06 (Blue/White)
+                                                               │
+                                                               ▼
+                                                          A11 (State) ──► I05 (GameOver)
+                                                               │
+                                                               ▼
+                                                          I09 (Accelerometer — Android polish)
+```
+
+---
+
+## Definition of Done (per task)
+
+- [ ] File(s) created/updated at the path in `docs/ARCHITECTURE.md`.
+- [ ] Compiles cleanly (`./gradlew compileJava`).
+- [ ] If the task names a design pattern, the pattern is clearly visible (named class, not hidden in a lambda or switch).
+- [ ] Task moved to **complete** on ClickUp.
 
 ## Definition of Done (MVP)
 
-- [ ] All 10 tasks in status **complete** on ClickUp.
-- [ ] `./gradlew desktop:run` launches straight into gameplay loop (Menu → Game → GameOver → Restart).
-- [ ] High score persists across app restarts (`Preferences`).
-- [ ] Keyboard works on desktop; accelerometer works on Android (or desktop-only is explicitly accepted).
-- [ ] No exceptions during a 2-minute play session — verified in logcat / stdout.
-- [ ] Each of the 6 design patterns has:
-  - [ ] at least one implementing class,
-  - [ ] a one-line javadoc explaining the pattern,
-  - [ ] a pointer to it in `docs/ARCHITECTURE.md`.
-- [ ] `./gradlew test` is green (JUnit 5 unit tests + headless smoke).
+- [ ] All 20 tasks **complete**.
+- [ ] `./gradlew desktop:run` plays end-to-end: Menu → Game → GameOver → Restart.
+- [ ] High score persists across app restart.
+- [ ] No exceptions during a 2-minute play session.
+- [ ] All 6 design patterns have a code home and a one-line javadoc pointing to `docs/ARCHITECTURE.md`.
