@@ -1,19 +1,78 @@
-# DuddleJump
+<div align="center">
 
-A Doodle-Jump style endless jumper built with **Java + [libGDX](https://libgdx.com/)** as the final project for the **Design Pattern Class**.
+<img src="docs/logo.png" alt="JumpHooper logo" width="360" />
 
-The game is small and deliberately readable — every file has a single clear responsibility so the design patterns stay visible rather than buried in engine boilerplate.
+# JumpHooper
+
+**Bounce. Climb. Don't look down.**
+
+An endless vertical platformer in the spirit of Doodle Jump — built from scratch in **Java + libGDX** as the final project for the *Design Pattern Class*.
+
+[![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/17/)
+[![libGDX](https://img.shields.io/badge/libGDX-1.12.1-e74c3c?logo=libgdx&logoColor=white)](https://libgdx.com/)
+[![Gradle](https://img.shields.io/badge/Gradle-wrapper-02303a?logo=gradle&logoColor=white)](https://gradle.org/)
+[![Platforms](https://img.shields.io/badge/Platforms-Desktop%20%7C%20Android-6FCB6A)](#)
+[![License](https://img.shields.io/badge/License-Academic-lightgrey)](#license)
+
+</div>
 
 ---
 
-## Team
+## The game in 30 seconds
 
-| Member | Role | ClickUp ID |
+Steer a chunky ink-doodled character as it auto-jumps from platform to platform, higher and higher forever. Miss a platform, tumble off-screen, game over. Beat your own high score — that's the whole loop.
+
+| 🟢 Green | 🔴 Red | 🔵 Blue | ⚪ White |
+|:---:|:---:|:---:|:---:|
+| Standard bounce | One-hit, then breaks | Slides side-to-side | Vanishes on contact |
+
+---
+
+## Quick start
+
+```bash
+# Desktop (primary target)
+./gradlew desktop:run
+
+# Android (optional)
+./gradlew android:installDebug android:run
+
+# Tests
+./gradlew test
+
+# Sanity compile without launching
+./gradlew compileJava
+```
+
+Requirements: **JDK 17**. The Gradle wrapper handles everything else.
+
+---
+
+## Controls
+
+| Action | Desktop | Android |
 |---|---|---|
-| **Abror** | Gameplay engine (physics, platforms, collision, camera, state) | `290416131` |
-| **Ivan** | Flow / UI / persistence (screens, input, score, assets) | `113423894` |
+| Move left | `←` / `A` | Tilt left |
+| Move right | `→` / `D` | Tilt right |
+| Jump | *automatic on platform contact* | *automatic on platform contact* |
+| Pause | `Esc` | Back button |
 
-Tasks are tracked in the **"JumpHooper – Task management"** space on ClickUp (workspace `90182544099`, list `901816969291`).
+---
+
+## Why this repo exists — the six design patterns
+
+Grade weight isn't on gameplay polish — it's on **how clearly six classical patterns show up in the code**. Every pattern lives in a named class a reader can point at.
+
+| Pattern | Home | What it does |
+|---|---|---|
+| **Singleton** | `managers/ScoreManager` | One shared score source, `Preferences`-backed high score |
+| **Factory Method** | `factories/PlatformFactory.create(type, x, y)` | Builds platform subtypes without a `switch` leaking into `GameScreen` |
+| **Strategy** | `Platform.onContact(Doodle)` overrides | Each platform type defines its own reaction (bounce / break / slide / vanish) |
+| **Observer** | `events/EventBus` + `events/ContactListener` | HUD, audio, score all subscribe to contact + death events |
+| **State** | `state/GameState` → `Playing` / `Paused` / `GameOver` | Clean transitions instead of boolean flags |
+| **Adapter** | `input/InputController` → `Keyboard` / `Accelerometer` | Unifies two very different input APIs behind one interface |
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full deep-dive with sequence diagrams.
 
 ---
 
@@ -22,117 +81,89 @@ Tasks are tracked in the **"JumpHooper – Task management"** space on ClickUp (
 | Area | Choice |
 |---|---|
 | Language | **Java 17** |
-| Engine | **libGDX 1.12.x** |
-| Build | **Gradle** (wrapper committed) |
-| Targets | **Desktop (LWJGL3)** primary; Android optional |
-| Physics | Hand-rolled (gravity + velocity) — no Box2D needed at MVP scale |
-| Rendering | `SpriteBatch` + `OrthographicCamera` |
-| Assets | libGDX `AssetManager` |
-| UI | `Scene2D` (`Stage`, `Actor`, `Table`) for menus only — gameplay uses raw `SpriteBatch` |
-| Persistence | `Preferences` API (cross-platform key/value) |
+| Engine | **libGDX 1.12.1** |
+| Build | Gradle (wrapper committed) |
+| Rendering | `SpriteBatch` + `OrthographicCamera` + `FitViewport` (480 × 800 virtual) |
+| Physics | Hand-rolled `Vector2` integration — no Box2D at MVP scope |
+| UI | `Scene2D` for menus, raw `SpriteBatch` for gameplay |
+| Persistence | `Gdx.app.getPreferences("jumphooper")` |
+| Tests | JUnit 5 + `HeadlessApplicationConfiguration` |
 
 ---
 
-## Gameplay
-
-- Doodle (the player) auto-jumps on contact with platforms.
-- Player controls horizontal movement — arrow keys / A-D on desktop, accelerometer tilt on Android.
-- Four platform types:
-  - 🟢 **Green** — normal bounce
-  - 🔴 **Red** — breaks after one jump
-  - 🔵 **Blue** — moves horizontally
-  - ⚪ **White** — disappears after contact
-- Score = +1 per platform landing; **high score** persists via `Preferences`.
-- Game ends when Doodle falls below the camera → Game Over screen → restart.
-
----
-
-## Quick start
-
-```shell
-# Desktop
-./gradlew desktop:run
-
-# Android
-./gradlew android:installDebug android:run
-
-# Tests
-./gradlew test
-```
-
----
-
-## Project structure (Gradle multi-module)
+## Repo layout
 
 ```
 .
-├── build.gradle                  # root build config
-├── settings.gradle               # module list
-├── gradle/                       # wrapper
-├── core/                         # platform-agnostic game code
+├── core/            ← platform-agnostic game code
 │   └── src/com/duddlejump/
-│       ├── DuddleJumpGame.java   # com.badlogic.gdx.Game subclass
-│       ├── screens/
-│       │   ├── MainMenuScreen.java
-│       │   ├── GameScreen.java
-│       │   └── GameOverScreen.java
-│       ├── entities/
-│       │   ├── Doodle.java
-│       │   ├── Platform.java          (abstract)
-│       │   ├── GreenPlatform.java
-│       │   ├── RedPlatform.java
-│       │   ├── BluePlatform.java
-│       │   └── WhitePlatform.java
-│       ├── factories/
-│       │   └── PlatformFactory.java   # Factory Method
-│       ├── managers/
-│       │   ├── ScoreManager.java      # Singleton + Preferences
-│       │   └── Assets.java            # wraps libGDX AssetManager
-│       ├── input/
-│       │   ├── InputController.java        (interface)
-│       │   ├── KeyboardInputController.java
-│       │   └── AccelerometerInputController.java
-│       ├── state/
-│       │   ├── GameState.java         (interface)
-│       │   ├── PlayingState.java
-│       │   ├── PausedState.java
-│       │   └── GameOverState.java
-│       └── events/
-│           ├── ContactListener.java   (interface, Observer)
-│           └── EventBus.java          (Observer dispatcher)
-├── desktop/                      # LWJGL3 launcher
-│   └── src/com/duddlejump/desktop/DesktopLauncher.java
-├── android/                      # Android launcher (optional)
-│   └── src/com/duddlejump/android/AndroidLauncher.java
-├── assets/                       # shared asset root (images, fonts, skins)
-│   ├── images/
-│   ├── fonts/
-│   └── sounds/
-├── tests/                        # JUnit 5
-│   └── src/com/duddlejump/...
+│       ├── DuddleJumpGame.java, Config.java
+│       ├── screens/      MainMenu · Loading · Game · GameOver
+│       ├── entities/     Doodle · Platform + 4 subclasses · Spawner
+│       ├── factories/    PlatformFactory        (Factory Method)
+│       ├── managers/     Assets · ScoreManager  (Singleton)
+│       ├── input/        InputController impls  (Adapter)
+│       ├── state/        GameState hierarchy    (State)
+│       └── events/       EventBus · Listener    (Observer)
+├── desktop/         ← LWJGL3 launcher
+├── android/         ← Android launcher (optional)
+├── assets/          ← sprites, fonts, sounds loaded at runtime
+├── tests/           ← JUnit 5 suites
 └── docs/
-    ├── ARCHITECTURE.md           # design patterns + module graph
-    └── MVP_TASKS.md              # 10-task split between team members
+    ├── ARCHITECTURE.md   ← pattern deep-dive
+    ├── MVP_TASKS.md      ← 20-task split with ClickUp IDs
+    └── logo.png
 ```
 
+> 💡 The Java package stays `com.duddlejump` for stability — *JumpHooper* is the public-facing brand on the title screen and marketing art.
+
 ---
 
-## Design patterns applied
+## Team
 
-| Pattern | Where | Why |
+| | Role | Scope |
 |---|---|---|
-| **Singleton** | `ScoreManager` | One score source of truth across screens; wraps `Preferences` |
-| **Factory Method** | `PlatformFactory.create(type)` | Platform subtypes constructed without `switch` in `GameScreen` |
-| **Strategy** | Platform `onContact(Doodle)` overrides | Each type defines its own reaction |
-| **Observer** | `EventBus` + `ContactListener` | Screens, HUD, audio subscribe to contact/death events |
-| **State** | `GameState` hierarchy inside `GameScreen` | Clean play / pause / game-over transitions |
-| **Adapter** | `InputController` implementations | Unifies keyboard and accelerometer behind one interface |
+| **Abror** | Gameplay engine | Physics, platforms, collision, camera, state machine *(11 tasks)* |
+| **Ivan Kanevskii** | Flow / UI / persistence | Screens, input, score, asset pipeline *(9 tasks)* |
 
-See **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for rationale, class diagrams, and code sketches.
+Tasks tracked on **ClickUp** — workspace `90182544099`, list `901816969291` ("JumpHooper – Task management"). Full breakdown in [`docs/MVP_TASKS.md`](docs/MVP_TASKS.md).
 
 ---
 
-## Documentation index
+## Contributing (team workflow)
 
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — design-pattern deep dive, module map, dataflow.
-- **[docs/MVP_TASKS.md](docs/MVP_TASKS.md)** — the 10-task MVP plan split 5/5 between team members.
+- One feature per branch: `feature/<scope>` off `main`.
+- PR titles start with the ClickUp task prefix: `[A05] Green + Red platforms`.
+- Before pushing: `./gradlew compileJava && ./gradlew test` must both pass.
+- Don't collapse a design pattern into a `switch`, a lambda, or a boolean flag — the grader reads the code.
+
+Current active feature branches:
+- `feature/bootstrap` — Gradle + game class + asset wrapper
+- `feature/doodle` — sprite + physics
+- `feature/platforms` — base, variants, factory
+- `feature/collision-events` — Observer event bus
+- `feature/world-scroll` — camera + spawning
+- `feature/state-machine` — play / pause / game over
+- `feature/input` — keyboard + accelerometer
+- `feature/scoring` — current + persisted high score
+- `feature/ui-screens` — loading, menu, game over
+
+---
+
+## Documentation
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — design patterns, sequence diagrams, module map.
+- [`docs/MVP_TASKS.md`](docs/MVP_TASKS.md) — 20-task split with dependency graph and DoD.
+- [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md) — AI coding-assistant entry points.
+
+---
+
+## License
+
+Academic project — **Design Pattern Class, 2026**. Not licensed for commercial distribution.
+
+<div align="center">
+
+*Made with ink, Java, and a lot of vertical scrolling.*
+
+</div>
