@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/logo.jpg" alt="JumpHooper logo" width="360" />
+<img src="docs/logo.jpg" alt="JumpHooper logo" width="220" />
 
 # JumpHooper
 
