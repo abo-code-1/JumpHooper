@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/logo.png" alt="JumpHooper logo" width="360" />
+<img src="docs/logo.jpg" alt="JumpHooper logo" width="360" />
 
 # JumpHooper
 
@@ -112,7 +112,8 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full deep-dive with s
 └── docs/
     ├── ARCHITECTURE.md   ← pattern deep-dive
     ├── MVP_TASKS.md      ← 20-task split with ClickUp IDs
-    └── logo.png
+    ├── logo.jpg        ← README-sized (176 KB)
+    └── logo@2x.png     ← full-res master (6.1 MB)
 ```
 
 > 💡 The Java package stays `com.duddlejump` for stability — *JumpHooper* is the public-facing brand on the title screen and marketing art.
