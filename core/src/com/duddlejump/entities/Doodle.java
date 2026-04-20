@@ -2,19 +2,25 @@ package com.duddlejump.entities;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Disposable;
+import com.duddlejump.Config;
+import com.duddlejump.input.InputController;
 
 public class Doodle implements Disposable {
 
-    public static final float WIDTH = 48f;
-    public static final float HEIGHT = 48f;
+    public static final float WIDTH = 56f;
+    public static final float HEIGHT = 64f;
 
     private final Texture texture;
     private final boolean ownsTexture;
     private final Vector2 position = new Vector2();
+    private final Vector2 velocity = new Vector2();
     private final Rectangle bounds = new Rectangle();
+    private boolean facingRight = true;
+    private boolean shielded = false;
 
     public Doodle(Texture texture, float x, float y) {
         this(texture, x, y, false);
@@ -27,12 +33,63 @@ public class Doodle implements Disposable {
         this.bounds.set(x, y, WIDTH, HEIGHT);
     }
 
+    public void update(float dt, InputController input) {
+        float horizontal = input.getHorizontal();
+        if (horizontal != 0f) {
+            velocity.x += horizontal * Config.HORIZONTAL_ACCEL * dt;
+            facingRight = horizontal > 0f;
+        } else {
+            velocity.x *= Config.HORIZONTAL_DRAG;
+            if (Math.abs(velocity.x) < 1f) {
+                velocity.x = 0f;
+            }
+        }
+        velocity.x = MathUtils.clamp(velocity.x, -Config.MAX_HORIZONTAL_SPEED, Config.MAX_HORIZONTAL_SPEED);
+        velocity.y += Config.GRAVITY * dt;
+
+        position.x += velocity.x * dt;
+        position.y += velocity.y * dt;
+
+        wrapHorizontally();
+    }
+
+    public void bounce() {
+        velocity.y = Config.JUMP_VELOCITY;
+    }
+
+    public void boost(float verticalVelocity) {
+        velocity.y = verticalVelocity;
+    }
+
+    public boolean consumeShield() {
+        if (shielded) {
+            shielded = false;
+            return true;
+        }
+        return false;
+    }
+
+    public void grantShield() {
+        shielded = true;
+    }
+
+    public boolean isShielded() {
+        return shielded;
+    }
+
     public void render(SpriteBatch batch) {
-        batch.draw(texture, position.x, position.y, WIDTH, HEIGHT);
+        float drawW = WIDTH;
+        float originX = facingRight ? position.x : position.x + WIDTH;
+        float w = facingRight ? drawW : -drawW;
+        batch.draw(texture, originX, position.y, w, HEIGHT);
     }
 
     public Vector2 getPosition() {
         return position;
+    }
+
+    public Vector2 getVelocity() {
+        return velocity;
     }
 
     public Rectangle getBounds() {
@@ -42,6 +99,14 @@ public class Doodle implements Disposable {
 
     public void setPosition(float x, float y) {
         position.set(x, y);
+    }
+
+    private void wrapHorizontally() {
+        if (position.x + WIDTH < 0f) {
+            position.x = Config.WORLD_WIDTH;
+        } else if (position.x > Config.WORLD_WIDTH) {
+            position.x = -WIDTH;
+        }
     }
 
     @Override

@@ -12,6 +12,8 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.duddlejump.Config;
 import com.duddlejump.DuddleJumpGame;
 import com.duddlejump.entities.Doodle;
+import com.duddlejump.input.InputController;
+import com.duddlejump.input.KeyboardInputController;
 
 public class GameScreen extends ScreenAdapter {
 
@@ -19,6 +21,7 @@ public class GameScreen extends ScreenAdapter {
     private final Viewport viewport;
     private final SpriteBatch batch;
     private final Doodle doodle;
+    private final InputController input;
 
     public GameScreen(DuddleJumpGame game) {
         this.game = game;
@@ -28,11 +31,13 @@ public class GameScreen extends ScreenAdapter {
             new OrthographicCamera()
         );
         this.batch = new SpriteBatch();
+        this.input = new KeyboardInputController();
 
         Texture sprite = createPlaceholderSprite();
         float startX = (Config.VIEWPORT_WIDTH - Doodle.WIDTH) * 0.5f;
         float startY = Config.VIEWPORT_HEIGHT * 0.25f;
         this.doodle = new Doodle(sprite, startX, startY, true);
+        this.doodle.bounce();
     }
 
     @Override
@@ -42,6 +47,8 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
+        doodle.update(delta, input);
+
         ScreenUtils.clear(0.97f, 0.95f, 0.88f, 1.0f);
         viewport.apply();
         batch.setProjectionMatrix(viewport.getCamera().combined);
@@ -62,15 +69,18 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private static Texture createPlaceholderSprite() {
-        int size = 64;
-        Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
+        int w = 56;
+        int h = 64;
+        Pixmap pixmap = new Pixmap(w, h, Pixmap.Format.RGBA8888);
         pixmap.setColor(new Color(0f, 0f, 0f, 0f));
         pixmap.fill();
         pixmap.setColor(new Color(0.36f, 0.72f, 0.36f, 1f));
-        pixmap.fillCircle(size / 2, size / 2, size / 2 - 2);
+        pixmap.fillCircle(w / 2, h / 2, Math.min(w, h) / 2 - 2);
         pixmap.setColor(Color.BLACK);
-        pixmap.fillCircle((int) (size * 0.35f), (int) (size * 0.4f), 4);
-        pixmap.fillCircle((int) (size * 0.65f), (int) (size * 0.4f), 4);
+        pixmap.fillCircle((int) (w * 0.35f), (int) (h * 0.4f), 4);
+        pixmap.fillCircle((int) (w * 0.65f), (int) (h * 0.4f), 4);
+        pixmap.setColor(new Color(0.2f, 0.5f, 0.2f, 1f));
+        pixmap.fillRectangle(w / 2 - 2, (int) (h * 0.75f), 4, 6);
         Texture texture = new Texture(pixmap);
         pixmap.dispose();
         return texture;
