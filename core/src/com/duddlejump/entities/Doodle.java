@@ -2,11 +2,14 @@ package com.duddlejump.entities;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.duddlejump.Config;
+import com.duddlejump.events.EventBus;
 import com.duddlejump.input.InputController;
 
 public class Doodle implements Disposable {
@@ -19,6 +22,7 @@ public class Doodle implements Disposable {
     private final Vector2 position = new Vector2();
     private final Vector2 velocity = new Vector2();
     private final Rectangle bounds = new Rectangle();
+    private final Rectangle feet = new Rectangle();
     private boolean facingRight = true;
     private boolean shielded = false;
 
@@ -55,6 +59,23 @@ public class Doodle implements Disposable {
 
     public void bounce() {
         velocity.y = Config.JUMP_VELOCITY;
+    }
+
+    public void checkContact(Array<Platform> platforms, EventBus bus) {
+        if (velocity.y >= 0f) {
+            return;
+        }
+        feet.set(bounds.x + 6f, bounds.y, bounds.width - 12f, 8f);
+        for (int i = 0; i < platforms.size; i++) {
+            Platform p = platforms.get(i);
+            if (p.isDestroyed()) {
+                continue;
+            }
+            if (Intersector.overlaps(feet, p.getBounds())) {
+                bus.publishContact(this, p);
+                return;
+            }
+        }
     }
 
     public void boost(float verticalVelocity) {
