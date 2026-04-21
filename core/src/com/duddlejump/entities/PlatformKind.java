@@ -4,5 +4,6 @@ public enum PlatformKind {
     GREEN,
     RED,
     BLUE,
-    WHITE
+    WHITE,
+    SPRING
 }
