@@ -6,18 +6,20 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.duddlejump.Config;
 import com.duddlejump.DuddleJumpGame;
 import com.duddlejump.entities.Doodle;
-import com.duddlejump.entities.Platform;
 import com.duddlejump.entities.PlatformSpawner;
 import com.duddlejump.events.EventBus;
 import com.duddlejump.factories.PlatformFactory;
 import com.duddlejump.input.InputController;
 import com.duddlejump.input.KeyboardInputController;
+import com.duddlejump.state.GameOverState;
+import com.duddlejump.state.GameState;
+import com.duddlejump.state.PausedState;
+import com.duddlejump.state.PlayingState;
 
 public class GameScreen extends ScreenAdapter {
 
@@ -31,7 +33,13 @@ public class GameScreen extends ScreenAdapter {
     private final PlatformSpawner spawner;
     private final Doodle doodle;
 
+    private final PlayingState playingState;
+    private final PausedState pausedState;
+    private final GameOverState gameOverState;
+    private GameState current;
+
     private float highestY;
+    private boolean gameOverQueued;
 
     public GameScreen(DuddleJumpGame game) {
         this.game = game;
@@ -56,6 +64,12 @@ public class GameScreen extends ScreenAdapter {
         spawner.seed(startY - 40f, camera.position.y + Config.VIEWPORT_HEIGHT);
 
         bus.subscribe((d, p) -> p.onContact(d));
+
+        this.playingState = new PlayingState(this);
+        this.pausedState = new PausedState(this);
+        this.gameOverState = new GameOverState(this);
+        this.current = playingState;
+        this.current.enter();
     }
 
     @Override
@@ -65,46 +79,88 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
-        doodle.update(delta, input);
-
-        float cameraTop = camera.position.y + Config.VIEWPORT_HEIGHT * 0.5f;
-        float cameraBottom = camera.position.y - Config.VIEWPORT_HEIGHT * 0.5f;
-
-        spawner.update(delta, cameraBottom, cameraTop);
-        doodle.checkContact(spawner.getPlatforms(), bus);
-
-        followCamera();
-
-        if (doodle.getPosition().y > highestY) {
-            highestY = doodle.getPosition().y;
-        }
+        current.update(delta);
 
         ScreenUtils.clear(0.97f, 0.95f, 0.88f, 1.0f);
         viewport.apply();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        Array<Platform> platforms = spawner.getPlatforms();
-        for (int i = 0; i < platforms.size; i++) {
-            platforms.get(i).render(batch);
-        }
-        doodle.render(batch);
+        current.render(batch);
         batch.end();
+    }
+
+    public void updateWorld(float dt) {
+        doodle.update(dt, input);
+
+        float cameraTop = camera.position.y + Config.VIEWPORT_HEIGHT * 0.5f;
+        float cameraBottom = camera.position.y - Config.VIEWPORT_HEIGHT * 0.5f;
+
+        spawner.update(dt, cameraBottom, cameraTop);
+        doodle.checkContact(spawner.getPlatforms(), bus);
+
+        if (doodle.getPosition().y > camera.position.y) {
+            camera.position.y = doodle.getPosition().y;
+            camera.update();
+        }
+        if (doodle.getPosition().y > highestY) {
+            highestY = doodle.getPosition().y;
+        }
+    }
+
+    public void setState(GameState next) {
+        if (current != null) {
+            current.exit();
+        }
+        current = next;
+        current.enter();
+    }
+
+    public boolean isDoodleBelowCamera() {
+        return doodle.getPosition().y + Doodle.HEIGHT < camera.position.y - Config.VIEWPORT_HEIGHT * 0.5f;
+    }
+
+    public void queueGameOver() {
+        gameOverQueued = true;
+    }
+
+    public boolean isGameOverQueued() {
+        return gameOverQueued;
+    }
+
+    public InputController getInput() {
+        return input;
+    }
+
+    public Doodle getDoodle() {
+        return doodle;
+    }
+
+    public PlatformSpawner getSpawner() {
+        return spawner;
+    }
+
+    public EventBus getBus() {
+        return bus;
+    }
+
+    public OrthographicCamera getCamera() {
+        return camera;
     }
 
     public float getHighestY() {
         return highestY;
     }
 
-    public float getCameraBottom() {
-        return camera.position.y - Config.VIEWPORT_HEIGHT * 0.5f;
+    public PlayingState getPlayingState() {
+        return playingState;
     }
 
-    private void followCamera() {
-        float threshold = camera.position.y;
-        if (doodle.getPosition().y > threshold) {
-            camera.position.y = doodle.getPosition().y;
-            camera.update();
-        }
+    public PausedState getPausedState() {
+        return pausedState;
+    }
+
+    public GameOverState getGameOverState() {
+        return gameOverState;
     }
 
     @Override
