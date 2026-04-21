@@ -20,6 +20,7 @@ public class Doodle implements Disposable {
     private final Texture texture;
     private final boolean ownsTexture;
     private final Vector2 position = new Vector2();
+    private final Vector2 previousPosition = new Vector2();
     private final Vector2 velocity = new Vector2();
     private final Rectangle bounds = new Rectangle();
     private final Rectangle feet = new Rectangle();
@@ -34,10 +35,12 @@ public class Doodle implements Disposable {
         this.texture = texture;
         this.ownsTexture = ownsTexture;
         this.position.set(x, y);
+        this.previousPosition.set(x, y);
         this.bounds.set(x, y, WIDTH, HEIGHT);
     }
 
     public void update(float dt, InputController input) {
+        previousPosition.set(position);
         float horizontal = input.getHorizontal();
         if (horizontal != 0f) {
             velocity.x += horizontal * Config.HORIZONTAL_ACCEL * dt;
@@ -55,6 +58,7 @@ public class Doodle implements Disposable {
         position.y += velocity.y * dt;
 
         wrapHorizontally();
+        syncBounds();
     }
 
     public void bounce() {
@@ -65,13 +69,28 @@ public class Doodle implements Disposable {
         if (velocity.y >= 0f) {
             return;
         }
+        syncBounds();
         feet.set(bounds.x + 6f, bounds.y, bounds.width - 12f, 8f);
+        float previousBottom = previousPosition.y;
         for (int i = 0; i < platforms.size; i++) {
             Platform p = platforms.get(i);
             if (p.isDestroyed()) {
                 continue;
             }
-            if (Intersector.overlaps(feet, p.getBounds())) {
+            Rectangle platformBounds = p.getBounds();
+            float platformTop = platformBounds.y + platformBounds.height;
+            boolean horizontalOverlap = feet.x < platformBounds.x + platformBounds.width
+                && feet.x + feet.width > platformBounds.x;
+            boolean crossedTop = previousBottom >= platformTop && feet.y <= platformTop;
+            if (horizontalOverlap && crossedTop) {
+                position.y = platformTop;
+                syncBounds();
+                bus.publishContact(this, p);
+                return;
+            }
+            if (Intersector.overlaps(feet, platformBounds)) {
+                position.y = platformTop;
+                syncBounds();
                 bus.publishContact(this, p);
                 return;
             }
@@ -114,12 +133,18 @@ public class Doodle implements Disposable {
     }
 
     public Rectangle getBounds() {
-        bounds.setPosition(position.x, position.y);
+        syncBounds();
         return bounds;
     }
 
     public void setPosition(float x, float y) {
         position.set(x, y);
+        previousPosition.set(x, y);
+        syncBounds();
+    }
+
+    public float getPreviousY() {
+        return previousPosition.y;
     }
 
     private void wrapHorizontally() {
@@ -128,6 +153,10 @@ public class Doodle implements Disposable {
         } else if (position.x > Config.WORLD_WIDTH) {
             position.x = -WIDTH;
         }
+    }
+
+    private void syncBounds() {
+        bounds.setPosition(position.x, position.y);
     }
 
     @Override

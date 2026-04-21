@@ -181,6 +181,10 @@ public class GameScreen extends ScreenAdapter {
         return gameOverState;
     }
 
+    public GameState getCurrentState() {
+        return current;
+    }
+
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, false);

@@ -16,4 +16,8 @@ subprojects {
         options.encoding = 'UTF-8'
         options.release = 17
     }
+
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+    }
 }
