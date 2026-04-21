@@ -10,6 +10,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.duddlejump.Config;
 import com.duddlejump.DuddleJumpGame;
+import com.duddlejump.background.BackgroundManager;
 import com.duddlejump.entities.Doodle;
 import com.duddlejump.entities.PlatformSpawner;
 import com.duddlejump.events.EventBus;
@@ -33,6 +34,7 @@ public class GameScreen extends ScreenAdapter {
     private final PlatformFactory platformFactory;
     private final PlatformSpawner spawner;
     private final Doodle doodle;
+    private final BackgroundManager background;
 
     private final PlayingState playingState;
     private final PausedState pausedState;
@@ -52,6 +54,7 @@ public class GameScreen extends ScreenAdapter {
         this.bus = new EventBus();
         this.platformFactory = new PlatformFactory();
         this.spawner = new PlatformSpawner(platformFactory);
+        this.background = new BackgroundManager();
 
         Texture sprite = createPlaceholderSprite();
         float startX = (Config.VIEWPORT_WIDTH - Doodle.WIDTH) * 0.5f;
@@ -83,11 +86,14 @@ public class GameScreen extends ScreenAdapter {
     @Override
     public void render(float delta) {
         current.update(delta);
+        background.update(highestY - scoreBaselineY);
 
-        ScreenUtils.clear(0.97f, 0.95f, 0.88f, 1.0f);
+        ScreenUtils.clear(0f, 0f, 0f, 1f);
         viewport.apply();
+        background.renderGradient(camera, Config.VIEWPORT_WIDTH, Config.VIEWPORT_HEIGHT);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+        background.renderDecorations(batch, camera, Config.VIEWPORT_WIDTH, Config.VIEWPORT_HEIGHT);
         current.render(batch);
         batch.end();
     }
@@ -185,6 +191,7 @@ public class GameScreen extends ScreenAdapter {
         doodle.dispose();
         platformFactory.dispose();
         gameOverState.dispose();
+        background.dispose();
         batch.dispose();
     }
 
