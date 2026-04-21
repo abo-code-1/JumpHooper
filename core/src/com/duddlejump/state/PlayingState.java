@@ -6,6 +6,7 @@ import com.duddlejump.entities.Platform;
 import com.duddlejump.managers.ScoreManager;
 import com.duddlejump.screens.GameScreen;
 
+/** State pattern — Playing state handles normal gameplay updates and rendering. */
 public final class PlayingState implements GameState {
 
     private final GameScreen screen;

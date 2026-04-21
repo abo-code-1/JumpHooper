@@ -10,10 +10,13 @@ public final class PlatformSpawner {
     private static final float MIN_VERTICAL_GAP = 90f;
     private static final float MAX_VERTICAL_GAP = 150f;
     private static final float DESPAWN_MARGIN = 120f;
+    private static final float MIN_HORIZONTAL_SHIFT = 36f;
+    private static final float MAX_HORIZONTAL_SHIFT = 150f;
 
     private final PlatformFactory factory;
     private final Array<Platform> platforms = new Array<>();
     private float nextSpawnY;
+    private float lastSpawnX;
 
     public PlatformSpawner(PlatformFactory factory) {
         this.factory = factory;
@@ -21,8 +24,8 @@ public final class PlatformSpawner {
 
     public void seed(float startY, float topY) {
         platforms.clear();
-        float anchorX = (Config.WORLD_WIDTH - Platform.WIDTH) * 0.5f;
-        platforms.add(factory.create(PlatformKind.GREEN, anchorX, startY));
+        lastSpawnX = (Config.WORLD_WIDTH - Platform.WIDTH) * 0.5f;
+        platforms.add(factory.create(PlatformKind.GREEN, lastSpawnX, startY));
         nextSpawnY = startY + MathUtils.random(MIN_VERTICAL_GAP, MAX_VERTICAL_GAP);
         fillUpTo(topY);
     }
@@ -46,13 +49,28 @@ public final class PlatformSpawner {
 
     private void fillUpTo(float topY) {
         while (nextSpawnY < topY) {
-            float x = MathUtils.random(0f, Config.WORLD_WIDTH - Platform.WIDTH);
+            float x = chooseNextX();
             float altitudeFactor = MathUtils.clamp(nextSpawnY / 6000f, 0f, 1f);
             float whiteProb = 0.08f + 0.12f * altitudeFactor;
             float redProb = 0.05f + 0.20f * altitudeFactor;
             float blueProb = 0.10f + 0.20f * altitudeFactor;
-            platforms.add(factory.random(x, nextSpawnY, redProb, blueProb, whiteProb));
+            float springProb = 0.04f + 0.06f * altitudeFactor;
+            platforms.add(factory.random(x, nextSpawnY, redProb, blueProb, whiteProb, springProb));
+            lastSpawnX = x;
             nextSpawnY += MathUtils.random(MIN_VERTICAL_GAP, MAX_VERTICAL_GAP);
         }
+    }
+
+    private float chooseNextX() {
+        float worldMaxX = Config.WORLD_WIDTH - Platform.WIDTH;
+        float direction = MathUtils.randomBoolean() ? 1f : -1f;
+        float shift = MathUtils.random(MIN_HORIZONTAL_SHIFT, MAX_HORIZONTAL_SHIFT);
+        float candidate = lastSpawnX + shift * direction;
+
+        if (candidate < 0f || candidate > worldMaxX) {
+            candidate = lastSpawnX - shift * direction;
+        }
+
+        return MathUtils.clamp(candidate, 0f, worldMaxX);
     }
 }

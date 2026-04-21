@@ -8,11 +8,17 @@ sourceSets {
         resources.srcDirs = []
     }
     test {
-        java.srcDirs = []
+        java.srcDirs = ['test']
         resources.srcDirs = []
     }
 }
 
 dependencies {
     api "com.badlogicgames.gdx:gdx:${gdxVersion}"
+
+    testImplementation platform('org.junit:junit-bom:5.12.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation "com.badlogicgames.gdx:gdx-backend-headless:${gdxVersion}"
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly "com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-desktop"
 }
