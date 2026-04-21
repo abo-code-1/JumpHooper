@@ -16,6 +16,7 @@ import com.duddlejump.events.EventBus;
 import com.duddlejump.factories.PlatformFactory;
 import com.duddlejump.input.InputController;
 import com.duddlejump.input.KeyboardInputController;
+import com.duddlejump.managers.ScoreManager;
 import com.duddlejump.state.GameOverState;
 import com.duddlejump.state.GameState;
 import com.duddlejump.state.PausedState;
@@ -39,6 +40,7 @@ public class GameScreen extends ScreenAdapter {
     private GameState current;
 
     private float highestY;
+    private float scoreBaselineY;
     private boolean gameOverQueued;
 
     public GameScreen(DuddleJumpGame game) {
@@ -57,6 +59,7 @@ public class GameScreen extends ScreenAdapter {
         this.doodle = new Doodle(sprite, startX, startY, true);
         this.doodle.bounce();
         this.highestY = startY;
+        this.scoreBaselineY = startY;
 
         camera.position.set(Config.VIEWPORT_WIDTH * 0.5f, Config.VIEWPORT_HEIGHT * 0.5f, 0f);
         camera.update();
@@ -104,7 +107,16 @@ public class GameScreen extends ScreenAdapter {
         }
         if (doodle.getPosition().y > highestY) {
             highestY = doodle.getPosition().y;
+            ScoreManager.INSTANCE.setCurrent((int) ((highestY - scoreBaselineY) / 10f));
         }
+    }
+
+    public DuddleJumpGame getGame() {
+        return game;
+    }
+
+    public int getScore() {
+        return (int) ((highestY - scoreBaselineY) / 10f);
     }
 
     public void setState(GameState next) {
@@ -172,6 +184,7 @@ public class GameScreen extends ScreenAdapter {
     public void dispose() {
         doodle.dispose();
         platformFactory.dispose();
+        gameOverState.dispose();
         batch.dispose();
     }
 

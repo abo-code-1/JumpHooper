@@ -3,6 +3,7 @@ package com.duddlejump.state;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Array;
 import com.duddlejump.entities.Platform;
+import com.duddlejump.managers.ScoreManager;
 import com.duddlejump.screens.GameScreen;
 
 public final class PlayingState implements GameState {
@@ -15,6 +16,7 @@ public final class PlayingState implements GameState {
 
     @Override
     public void enter() {
+        ScoreManager.INSTANCE.reset();
     }
 
     @Override
