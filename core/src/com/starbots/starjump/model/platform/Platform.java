@@ -19,6 +19,9 @@ public final class Platform {
     /** Which sprite to draw (also reflects the lava/effect state). */
     public PlatformKind kind = PlatformKind.GRASS;
 
+    /** A spring sitting on top of this platform -> super bounce when landed on. */
+    public boolean hasSpring;
+
     /** The Strategy in charge of this platform's behaviour. */
     private PlatformBehavior behavior;
 
@@ -45,5 +48,9 @@ public final class Platform {
 
     public float right() {
         return x + width;
+    }
+
+    public float centerX() {
+        return x + width / 2f;
     }
 }

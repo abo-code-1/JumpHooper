@@ -59,4 +59,58 @@ public final class SpritePatterns {
             new Color(0xff4d6dff), // glow red
             new Color(0xfff200ff), // core eye yellow
     };
+
+    /** Heart pickup (+1 life). 1 = outline, 2 = red, 3 = highlight. */
+    public static final int[][] HEART = {
+            {0,1,1,0,0,0,1,1,0},
+            {1,2,2,1,0,1,2,2,1},
+            {1,2,3,2,1,2,2,2,1},
+            {1,2,2,2,2,2,2,2,1},
+            {0,1,2,2,2,2,2,1,0},
+            {0,0,1,2,2,2,1,0,0},
+            {0,0,0,1,2,1,0,0,0},
+            {0,0,0,0,1,0,0,0,0},
+    };
+    public static final Color[] HEART_PALETTE = {
+            new Color(0x7a0a1aff), // outline dark red
+            new Color(0xff3b5cff), // red
+            new Color(0xffd0d8ff), // highlight
+    };
+
+    /** Coiled spring that sits on a platform. 1 = dark metal, 2 = light, 3 = red cap. */
+    public static final int[][] SPRING = {
+            {0,0,3,3,3,3,3,0,0},
+            {0,0,1,1,1,1,1,0,0},
+            {0,1,2,2,2,2,2,1,0},
+            {0,0,1,2,2,2,1,0,0},
+            {0,1,2,2,2,2,2,1,0},
+            {0,0,1,2,2,2,1,0,0},
+            {0,1,1,1,1,1,1,1,0},
+            {1,1,1,1,1,1,1,1,1},
+    };
+    public static final Color[] SPRING_PALETTE = {
+            new Color(0x4a4a52ff), // dark metal
+            new Color(0xb8c0ccff), // light metal
+            new Color(0xff4d4dff), // red cap
+    };
+
+    /** Jetpack pickup. 1 = casing, 2 = tank, 3 = nozzle, 4 = flame. */
+    public static final int[][] JETPACK = {
+            {0,1,1,0,0,1,1,0},
+            {1,2,2,1,1,2,2,1},
+            {1,2,2,1,1,2,2,1},
+            {1,2,2,1,1,2,2,1},
+            {1,2,2,1,1,2,2,1},
+            {1,1,1,3,3,1,1,1},
+            {0,1,3,3,3,3,1,0},
+            {0,0,4,4,4,4,0,0},
+            {0,0,0,4,4,0,0,0},
+            {0,0,0,0,4,0,0,0},
+    };
+    public static final Color[] JETPACK_PALETTE = {
+            new Color(0x3a3a40ff), // casing
+            new Color(0xc8ccd2ff), // tank silver
+            new Color(0xff8c1aff), // nozzle orange
+            new Color(0xffe24aff), // flame
+    };
 }

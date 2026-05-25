@@ -44,11 +44,15 @@ public final class Assets implements Disposable {
     public Texture enemyDrone;
     public Texture enemyHunter;
     public Texture bossSprite;
+    public Texture heart;       // life pickup
+    public Texture spring;      // platform spring
+    public Texture jetpack;     // jetpack pickup
 
     // Sound
     public Sound swoosh;
     // Synthesized SFX (may be null if synthesis failed; always used null-safely)
     public Sound sfxJump, sfxLand, sfxHit, sfxExplosion, sfxPowerup, sfxBoss, sfxGameOver;
+    public Sound sfxSpring, sfxJetpack;
 
     // Font generators + cache
     private final ObjectMap<String, FreeTypeFontGenerator> generators = new ObjectMap<>();
@@ -80,6 +84,9 @@ public final class Assets implements Disposable {
         enemyDrone  = PixelArt.fromPattern(SpritePatterns.DRONE, 6, SpritePatterns.DRONE_PALETTE);
         enemyHunter = PixelArt.fromPattern(SpritePatterns.HUNTER, 6, SpritePatterns.HUNTER_PALETTE);
         bossSprite  = PixelArt.fromPattern(SpritePatterns.BOSS, 8, SpritePatterns.BOSS_PALETTE);
+        heart       = PixelArt.fromPattern(SpritePatterns.HEART, 5, SpritePatterns.HEART_PALETTE);
+        spring      = PixelArt.fromPattern(SpritePatterns.SPRING, 4, SpritePatterns.SPRING_PALETTE);
+        jetpack     = PixelArt.fromPattern(SpritePatterns.JETPACK, 5, SpritePatterns.JETPACK_PALETTE);
 
         // Synthesized sound effects.
         sfxJump      = SfxSynth.jump();
@@ -89,6 +96,8 @@ public final class Assets implements Disposable {
         sfxPowerup   = SfxSynth.powerup();
         sfxBoss      = SfxSynth.boss();
         sfxGameOver  = SfxSynth.gameOver();
+        sfxSpring    = SfxSynth.spring();
+        sfxJetpack   = SfxSynth.jetpack();
 
         registerGenerator(NASALIZATION, "fonts/nasalization.ttf");
         registerGenerator(THALEAH, "fonts/ThaleahFat.ttf");
@@ -142,10 +151,13 @@ public final class Assets implements Disposable {
         enemyDrone.dispose();
         enemyHunter.dispose();
         bossSprite.dispose();
+        heart.dispose();
+        spring.dispose();
+        jetpack.dispose();
         disposeSound(swoosh);
         disposeSound(sfxJump); disposeSound(sfxLand); disposeSound(sfxHit);
         disposeSound(sfxExplosion); disposeSound(sfxPowerup); disposeSound(sfxBoss);
-        disposeSound(sfxGameOver);
+        disposeSound(sfxGameOver); disposeSound(sfxSpring); disposeSound(sfxJetpack);
         for (BitmapFont f : fontCache.values()) f.dispose();
         for (FreeTypeFontGenerator g : generators.values()) g.dispose();
     }

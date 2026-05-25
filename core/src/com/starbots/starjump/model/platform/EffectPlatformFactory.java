@@ -50,7 +50,13 @@ public final class EffectPlatformFactory extends PlatformFactory {
         } else {
             // Static slot: a cracked texture means it actually breaks.
             p.kind = randomGround();
-            p.setBehavior(isCracked(p.kind) ? BreakableBehavior.INSTANCE : StaticBehavior.INSTANCE);
+            if (isCracked(p.kind)) {
+                p.setBehavior(BreakableBehavior.INSTANCE);
+            } else {
+                p.setBehavior(StaticBehavior.INSTANCE);
+                // Solid platforms occasionally carry a spring (super bounce).
+                if (MathUtils.random() < 0.09f) p.hasSpring = true;
+            }
         }
         return p;
     }

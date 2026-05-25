@@ -57,6 +57,12 @@ public final class World {
         @Override protected Projectile newObject() { return new Projectile(); }
     };
 
+    private final Array<Pickup> pickups = new Array<>();
+
+    private int lives;
+    private float invulnTimer;     // brief i-frames after a hit
+    private float jetpackTimer;    // > 0 while flying
+
     private boolean gameOver;
 
     /** How far the world scrolled this step (>= 0); drives background parallax. */
@@ -72,10 +78,14 @@ public final class World {
         scores.startRun();
         player.reset();
         enemies.clear();
+        pickups.clear();
         boss = null;
         nextBossScore = FIRST_BOSS_SCORE;
         projectilePool.freeAll(projectiles);
         projectiles.clear();
+        lives = Config.START_LIVES;
+        invulnTimer = 0f;
+        jetpackTimer = 0f;
         gameOver = false;
         float max = Config.WORLD_WIDTH - Config.PLATFORM_W; // randomW(60)
         for (int i = 0; i < platforms.length; i++) {
@@ -90,18 +100,30 @@ public final class World {
         if (gameOver) return;
 
         lastScrollDy = 0f;
+        if (invulnTimer > 0) invulnTimer -= Config.STEP;
+
+        // Jetpack overrides physics: a steady, fast climb.
+        if (jetpackTimer > 0) {
+            jetpackTimer -= Config.STEP;
+            player.speed = Config.JETPACK_SPEED;
+        }
+
         final float velocityX = tilt.getTilt();
         final float speed = player.speed; // captured at frame start, exactly like the original
 
-        // Landing is only tested while falling.
-        if (speed > 0) {
+        // Landing is only tested while falling (and not while jetpacking).
+        if (speed > 0 && jetpackTimer <= 0) {
             for (int i = 0; i < platforms.length; i++) {
                 Platform p = platforms[i];
                 if (CollisionSystem.lands(player, p)) {
                     if (p.onLand(player)) {  // lava -> fatal (Strategy decides)
                         gameOver = true;
                     }
-                    jump();
+                    if (p.hasSpring) {
+                        springBounce(p);
+                    } else {
+                        jump();
+                    }
                     if (p.getBehavior() != null && p.getBehavior().breaksOnLand()) {
                         // Cracked platform: bounce, then shatter and recycle.
                         // Pass the old platform so the FX can draw its real texture.
@@ -127,7 +149,10 @@ public final class World {
         updateBoss();
         updateProjectiles();
 
-        // Fell off the bottom?
+        // Floating pickups (hearts, jetpacks).
+        updatePickups();
+
+        // Fell off the bottom? Always fatal — lives only guard against creatures.
         if (player.y > Config.WORLD_HEIGHT) {
             gameOver = true;
         }
@@ -185,15 +210,30 @@ public final class World {
                 // Generous "from above" stomp: any descending contact near the
                 // upper half counts as a bounce rather than a death.
                 boolean stomp = player.speed > 0 && player.bottom() <= e.centerY() + e.height * 0.3f;
-                if (stomp) {
-                    jump();                            // bounce off the enemy
+                if (stomp || jetpackTimer > 0) {
+                    if (stomp) jump();                 // bounce off it (jetpack just plows through)
                     scores.addScore(50);
                     publish(GameEventType.ENEMY_KILLED, new Vector2(e.centerX(), e.centerY()));
                     enemies.removeIndex(i);
-                } else {
-                    gameOver = true;                   // ran into it sideways/below
+                } else if (invulnTimer <= 0) {
+                    // A side/below hit costs a life (not an instant death).
+                    publish(GameEventType.ENEMY_KILLED, new Vector2(e.centerX(), e.centerY()));
+                    enemies.removeIndex(i);
+                    loseLife();
                 }
             }
+        }
+    }
+
+    /** Lose a life from a creature hit; game over only when none remain. */
+    private void loseLife() {
+        lives--;
+        if (lives <= 0) {
+            gameOver = true;
+        } else {
+            invulnTimer = Config.INVULN_TIME;
+            player.speed = -8f;                    // small recovery pop
+            publish(GameEventType.LIFE_LOST, lives);
         }
     }
 
@@ -272,11 +312,55 @@ public final class World {
                 projectiles.removeIndex(i);
                 continue;
             }
-            // Circle (projectile) vs AABB (player): a hit ends the run.
-            if (player.x < pr.x + pr.radius && player.x + player.width > pr.x - pr.radius
-                    && player.y < pr.y + pr.radius && player.bottom() > pr.y - pr.radius) {
-                gameOver = true;
+            // Circle (projectile) vs AABB (player): costs a life (boss damage).
+            boolean hit = player.x < pr.x + pr.radius && player.x + player.width > pr.x - pr.radius
+                    && player.y < pr.y + pr.radius && player.bottom() > pr.y - pr.radius;
+            if (hit) {
+                projectilePool.free(pr);
+                projectiles.removeIndex(i);
+                if (invulnTimer <= 0 && jetpackTimer <= 0) loseLife();
             }
+        }
+    }
+
+    /** Ported from {@code jump()} but with a much stronger spring impulse. */
+    private void springBounce(Platform p) {
+        player.speed = Config.SPRING_SPEED;
+        scores.registerJump();
+        publish(GameEventType.SPRING_BOUNCE, new Vector2(p.centerX(), p.y));
+    }
+
+    // --- pickups (hearts, jetpacks) -------------------------------------------
+
+    private static final int MAX_PICKUPS = 2;
+
+    private void updatePickups() {
+        for (int i = pickups.size - 1; i >= 0; i--) {
+            Pickup pk = pickups.get(i);
+            pk.bobPhase += Config.STEP * 4f;
+            if (pk.y > Config.WORLD_HEIGHT + 60) {
+                pickups.removeIndex(i);
+                continue;
+            }
+            boolean overlap = player.x < pk.right() && player.x + player.width > pk.x
+                    && player.y < pk.bottom() && player.bottom() > pk.y;
+            if (overlap) {
+                collect(pk);
+                pickups.removeIndex(i);
+            }
+        }
+    }
+
+    private void collect(Pickup pk) {
+        Vector2 pos = new Vector2(pk.centerX(), pk.centerY());
+        if (pk.type == Pickup.Type.HEART) {
+            if (lives < Config.MAX_LIVES) lives++;
+            else scores.addScore(150);             // already full -> bonus points
+            publish(GameEventType.LIFE_GAINED, lives);
+        } else { // JETPACK
+            jetpackTimer = Config.JETPACK_DURATION;
+            player.speed = Config.JETPACK_SPEED;
+            publish(GameEventType.JETPACK_START, pos);
         }
     }
 
@@ -302,9 +386,12 @@ public final class World {
                         spawnCtx.set(scores.getScore(), lavaAllowed));
             }
         }
-        // Enemies scroll with the world.
+        // Enemies + pickups scroll with the world.
         for (Enemy e : enemies) {
             e.y += dy;
+        }
+        for (Pickup pk : pickups) {
+            pk.y += dy;
         }
 
         // Occasionally spawn a new enemy from the top once unlocked
@@ -314,6 +401,19 @@ public final class World {
                 && MathUtils.random() < 0.005f) {
             float ex = MathUtils.random(0f, Config.WORLD_WIDTH - 46f);
             enemies.add(enemyFactory.spawn(ex, -90f, scores.getScore()));
+        }
+
+        // Floating pickups drift down from the top: hearts (more likely when hurt)
+        // and the rarer jetpack.
+        if (pickups.size < MAX_PICKUPS) {
+            float heartChance = lives < Config.MAX_LIVES ? 0.0035f : 0.0008f;
+            if (MathUtils.random() < heartChance) {
+                float px = MathUtils.random(20f, Config.WORLD_WIDTH - 54f);
+                pickups.add(new Pickup(Pickup.Type.HEART, px, -40f));
+            } else if (MathUtils.random() < 0.0016f) {
+                float px = MathUtils.random(20f, Config.WORLD_WIDTH - 50f);
+                pickups.add(new Pickup(Pickup.Type.JETPACK, px, -50f));
+            }
         }
 
         // score += -speed/5, rounded each frame (see ScoreManager).
@@ -339,8 +439,14 @@ public final class World {
     public Player getPlayer()                { return player; }
     public Platform[] getPlatforms()         { return platforms; }
     public Array<Enemy> getEnemies()         { return enemies; }
+    public Array<Pickup> getPickups()        { return pickups; }
     public Boss getBoss()                    { return boss; }
     public Array<Projectile> getProjectiles(){ return projectiles; }
     public boolean isGameOver()              { return gameOver; }
     public float getLastScrollDy()           { return lastScrollDy; }
+    public int getLives()                    { return lives; }
+    public int getMaxLives()                 { return Config.MAX_LIVES; }
+    public float getJetpackTimer()           { return jetpackTimer; }
+    public boolean isJetpackActive()         { return jetpackTimer > 0; }
+    public boolean isInvulnerable()          { return invulnTimer > 0; }
 }

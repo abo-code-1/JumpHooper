@@ -23,5 +23,14 @@ public enum GameEventType {
     /** The boss took a hit. Payload: world position (Vector2). */
     BOSS_HIT,
     /** The boss was defeated. Payload: world position (Vector2). */
-    BOSS_DEFEATED
+    BOSS_DEFEATED,
+
+    /** Player took a hit but survived (lost a life). Payload: lives remaining (Integer). */
+    LIFE_LOST,
+    /** Player gained a life from a heart. Payload: lives now (Integer). */
+    LIFE_GAINED,
+    /** Player launched off a spring. Payload: world position (Vector2). */
+    SPRING_BOUNCE,
+    /** Player picked up a jetpack. Payload: world position (Vector2). */
+    JETPACK_START
 }

@@ -31,6 +31,10 @@ public final class SoundController implements GameEventListener {
             case BOSS_DEFEATED:   play(assets.sfxExplosion, 1f); break;
             case NEW_RECORD:      play(assets.sfxPowerup, 0.8f); break;
             case PLAYER_DIED:     play(assets.sfxGameOver, 0.8f); break;
+            case SPRING_BOUNCE:   play(assets.sfxSpring, 0.7f);  break;
+            case JETPACK_START:   play(assets.sfxJetpack, 0.9f); break;
+            case LIFE_GAINED:     play(assets.sfxPowerup, 0.7f); break;
+            case LIFE_LOST:       play(assets.sfxHit, 0.9f);     break;
             default: break;
         }
     }

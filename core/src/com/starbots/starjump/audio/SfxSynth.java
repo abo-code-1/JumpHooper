@@ -52,6 +52,25 @@ public final class SfxSynth {
         return build("powerup", concat(a, b, c));
     }
 
+    /** A springy "boing" for trampolines/springs. */
+    public static Sound spring() {
+        return build("spring", sweep(0.22f, 320f, 1150f, 0.45f, Wave.SQUARE, 3.5f));
+    }
+
+    /** A sustained whoosh for the jetpack. */
+    public static Sound jetpack() {
+        float dur = 0.5f;
+        float[] buf = new float[(int) (SR * dur)];
+        for (int i = 0; i < buf.length; i++) {
+            float t = i / (float) SR;
+            float env = Math.min(1f, t * 8f) * Math.min(1f, (dur - t) * 8f);
+            float noise = (float) (Math.random() * 2 - 1);
+            float tone = (float) Math.sin(2 * Math.PI * 170 * t);
+            buf[i] = (noise * 0.5f + tone * 0.3f) * 0.5f * env;
+        }
+        return build("jetpack", buf);
+    }
+
     public static Sound boss() {
         float dur = 0.6f;
         float[] buf = new float[(int) (SR * dur)];

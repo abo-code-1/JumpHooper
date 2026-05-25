@@ -66,4 +66,17 @@ public final class Config {
 
     /** Lava platforms only start appearing once the score passes this. */
     public static final int LAVA_UNLOCK_SCORE = 600;
+
+    // --- power-ups & lives ----------------------------------------------------
+    /** Spring bounce impulse (~2x a normal jump, per Doodle Jump). */
+    public static final float SPRING_SPEED = -19f;
+    /** Steady upward speed while the jetpack is firing. */
+    public static final float JETPACK_SPEED = -15f;
+    /** Jetpack flight time in seconds (~5s in Doodle Jump). */
+    public static final float JETPACK_DURATION = 4f;
+    /** Brief invulnerability after taking a hit, so one touch costs one life. */
+    public static final float INVULN_TIME = 1.3f;
+
+    public static final int START_LIVES = 3;
+    public static final int MAX_LIVES = 5;
 }

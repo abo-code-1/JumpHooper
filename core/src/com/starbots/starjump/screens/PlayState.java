@@ -16,6 +16,7 @@ import com.starbots.starjump.fx.BreakingPlatformFx;
 import com.starbots.starjump.fx.ParticleSystem;
 import com.starbots.starjump.fx.ScreenShake;
 import com.starbots.starjump.fx.SpaceBackground;
+import com.starbots.starjump.model.Pickup;
 import com.starbots.starjump.model.Player;
 import com.starbots.starjump.model.Projectile;
 import com.starbots.starjump.model.World;
@@ -51,6 +52,7 @@ public final class PlayState implements GameState, GameEventListener {
     private final Vector2 tmp = new Vector2();
 
     private float accumulator;
+    private float animTime;
     private boolean deathHandled;
     private float deathTimer;
 
@@ -69,6 +71,7 @@ public final class PlayState implements GameState, GameEventListener {
     public void enter() {
         world.startRun();
         accumulator = 0f;
+        animTime = 0f;
         deathHandled = false;
         deathTimer = 0f;
         particles.clear();
@@ -104,6 +107,7 @@ public final class PlayState implements GameState, GameEventListener {
             }
         }
 
+        animTime += delta;
         background.update(delta, scrollDy);
         particles.update(delta);
         breakingFx.update(delta);
@@ -152,6 +156,26 @@ public final class PlayState implements GameState, GameEventListener {
                 shake.shake(24f, 0.7f);
                 break;
             }
+            case SPRING_BOUNCE: {
+                Vector2 pos = asPos(event.payload, p);
+                particles.jumpSparkle(pos.x, pos.y);
+                particles.jumpSparkle(pos.x, pos.y);
+                shake.shake(5f, 0.15f);
+                break;
+            }
+            case LIFE_LOST:
+                particles.explosion(p.x + p.width / 2f, p.y + p.height / 2f, 1f, 0.3f, 0.3f, 26);
+                shake.shake(14f, 0.4f);
+                break;
+            case LIFE_GAINED:
+                particles.explosion(p.x + p.width / 2f, p.y + p.height / 2f, 0.5f, 1f, 0.6f, 20);
+                break;
+            case JETPACK_START: {
+                Vector2 pos = asPos(event.payload, p);
+                particles.explosion(pos.x, pos.y, 1f, 0.7f, 0.2f, 28);
+                shake.shake(10f, 0.3f);
+                break;
+            }
             default:
                 break;
         }
@@ -177,9 +201,13 @@ public final class PlayState implements GameState, GameEventListener {
 
         for (Platform p : world.getPlatforms()) {
             painter.image(a.platform(p.kind), p.x, p.y, p.width, p.height);
+            if (p.hasSpring) {
+                painter.image(a.spring, p.centerX() - 12f, p.y - 22f, 24f, 26f);
+            }
         }
 
         breakingFx.render(batch, Config.WORLD_HEIGHT);
+        drawPickups(batch);
 
         for (Enemy e : world.getEnemies()) {
             painter.image(enemyTexture(e.type), e.x, e.y, e.width, e.height);
@@ -198,11 +226,55 @@ public final class PlayState implements GameState, GameEventListener {
         painter.textCentered(a.font(Assets.NASALIZATION, 32),
                 String.valueOf(ScoreManager.INSTANCE.getScore()),
                 Config.WORLD_WIDTH / 2f, 30f);
+        drawHud(batch);
         painter.end();
 
         // Reset camera to centre.
         cam.position.set(Config.WORLD_WIDTH / 2f, Config.WORLD_HEIGHT / 2f, 0);
         cam.update();
+    }
+
+    private void drawPickups(SpriteBatch batch) {
+        if (world.getPickups().isEmpty()) return;
+        float h = Config.WORLD_HEIGHT;
+        for (Pickup pk : world.getPickups()) {
+            float bob = MathUtils.sin(pk.bobPhase) * 4f;
+            float drawY = h - (pk.y + bob) - pk.height;
+            // Soft glow halo for visibility.
+            batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+            if (pk.type == Pickup.Type.HEART) batch.setColor(1f, 0.4f, 0.5f, 0.5f);
+            else                              batch.setColor(1f, 0.7f, 0.3f, 0.5f);
+            float g = pk.width * 2f;
+            batch.draw(a.glow, pk.centerX() - g / 2f, (h - (pk.y + bob) - pk.height / 2f) - g / 2f, g, g);
+            batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+            // Sprite.
+            batch.setColor(1f, 1f, 1f, 1f);
+            batch.draw(pk.type == Pickup.Type.HEART ? a.heart : a.jetpack,
+                    pk.x, drawY, pk.width, pk.height);
+        }
+    }
+
+    private void drawHud(SpriteBatch batch) {
+        // Lives as hearts, top-left.
+        batch.setColor(1f, 1f, 1f, 1f);
+        float hx = 12f, hy = 16f, hs = 22f;
+        for (int i = 0; i < world.getLives(); i++) {
+            painter.image(a.heart, hx + i * (hs + 4f), hy, hs, hs * 0.9f);
+        }
+
+        // Jetpack fuel bar (glowy), under the hearts, while flying.
+        if (world.isJetpackActive()) {
+            float frac = MathUtils.clamp(world.getJetpackTimer() / Config.JETPACK_DURATION, 0f, 1f);
+            float bx = 12f, by = 46f, bw = 132f, bh = 12f;
+            float topY = Config.WORLD_HEIGHT - by - bh;
+            batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+            batch.setColor(0.2f, 0.2f, 0.25f, 0.7f);
+            batch.draw(a.glow, bx, topY, bw, bh);
+            batch.setColor(1f, 0.7f, 0.2f, 0.95f);
+            batch.draw(a.glow, bx, topY, bw * frac, bh);
+            batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+            batch.setColor(1f, 1f, 1f, 1f);
+        }
     }
 
     private void drawPlayer(SpriteBatch batch, Player p) {
@@ -212,9 +284,12 @@ public final class PlayState implements GameState, GameEventListener {
         float scaleX = MathUtils.clamp(2f - stretch, 0.85f, 1.18f);
         float rot = MathUtils.clamp(-game.tilt().getTilt() * 22f, -16f, 16f);
 
+        // Flicker while briefly invulnerable after a hit.
+        float alpha = (world.isInvulnerable() && ((int) (animTime * 12f) % 2 == 0)) ? 0.35f : 1f;
+
         float cx = p.x + p.width / 2f;
         float cyUp = Config.WORLD_HEIGHT - (p.y + p.height / 2f);
-        batch.setColor(1f, 1f, 1f, 1f);
+        batch.setColor(1f, 1f, 1f, alpha);
         batch.draw(a.astronaut,
                 cx - p.width / 2f, cyUp - p.height / 2f,
                 p.width / 2f, p.height / 2f,
@@ -222,6 +297,7 @@ public final class PlayState implements GameState, GameEventListener {
                 scaleX, scaleY, rot,
                 0, 0, a.astronaut.getWidth(), a.astronaut.getHeight(),
                 p.facingLeft, false);
+        batch.setColor(1f, 1f, 1f, 1f);
     }
 
     private com.badlogic.gdx.graphics.Texture enemyTexture(EnemyType type) {
@@ -274,17 +350,26 @@ public final class PlayState implements GameState, GameEventListener {
     }
 
     private void drawThruster(SpriteBatch batch, Player p) {
-        if (p.speed >= -0.5f) return; // only while rising
+        boolean jet = world.isJetpackActive();
+        if (p.speed >= -0.5f && !jet) return; // only while rising / jetpacking
         float fx = p.x + p.width / 2f;
         float feetUp = Config.WORLD_HEIGHT - (p.y + p.height);
         float flick = MathUtils.random(0.75f, 1.15f);
-        float w = p.width * 0.8f * flick;
-        float h = p.height * 0.7f * flick;
+        float boost = jet ? 1.9f : 1f;
+        float w = p.width * 0.8f * flick * boost;
+        float h = p.height * 0.7f * flick * boost;
+
+        // The jetpack itself, strapped on behind the player.
+        if (jet) {
+            float jw = 26f, jh = 34f;
+            batch.setColor(1f, 1f, 1f, 1f);
+            batch.draw(a.jetpack, fx - jw / 2f, feetUp + 2f, jw, jh);
+        }
 
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
-        batch.setColor(1f, 0.6f, 0.15f, 0.8f);
+        batch.setColor(1f, 0.6f, 0.15f, 0.85f);
         batch.draw(a.glow, fx - w / 2f, feetUp - h * 0.85f, w, h);
-        batch.setColor(1f, 0.95f, 0.5f, 0.9f);
+        batch.setColor(1f, 0.95f, 0.5f, 0.95f);
         batch.draw(a.glow, fx - w * 0.3f, feetUp - h * 0.6f, w * 0.6f, h * 0.7f);
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         batch.setColor(1f, 1f, 1f, 1f);

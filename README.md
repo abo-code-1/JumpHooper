@@ -78,6 +78,14 @@ license-clean:
 - **Boss fights** — a saucer that descends, sways and rains aimed projectiles;
   bounce into it to damage it while dodging shots
   ([`model/boss`](core/src/com/starbots/starjump/model/boss)).
+- **Power-ups & lives:**
+  - **Springs** sit on some platforms for a ~2× super-bounce.
+  - **Jetpacks** are collectible pickups that grant ~4s of invulnerable upward
+    flight (with a fuel bar) that plows through enemies.
+  - **Hearts** are pickups that restore a life.
+  - **3 lives** (max 5): an enemy hit or boss shot costs a life with brief
+    invulnerability; falling off the bottom or touching lava is still instant
+    death — lives only guard against creatures, per design.
 
 These add three more patterns on top of the original six:
 
