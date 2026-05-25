@@ -169,7 +169,9 @@ public final class World {
                 continue;
             }
 
-            if (overlaps(e)) {
+            // An enemy is only dangerous once it has fully scrolled into view,
+            // so nothing can kill you from off-screen above.
+            if (e.y >= 0 && overlaps(e)) {
                 // Generous "from above" stomp: any descending contact near the
                 // upper half counts as a bounce rather than a death.
                 boolean stomp = player.speed > 0 && player.bottom() <= e.centerY() + e.height * 0.3f;
@@ -200,7 +202,9 @@ public final class World {
     private static final int FIRST_BOSS_SCORE = 2800;
     private static final int BOSS_RESPAWN_GAP = 4000;
     private static final int BOSS_HP = 4;
-    private static final float BOSS_HOVER_Y = 190f;
+    // Keep the boss reachable: it straddles the player's rest line (scroll
+    // threshold) so a rising bounce connects while shots still rain downward.
+    private static final float BOSS_HOVER_Y = Config.SCROLL_THRESHOLD - 66f;
     private static final float BOSS_BOUNCE = 7f;
 
     /** Spawn / advance the boss; the player damages it by bouncing into it. */

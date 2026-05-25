@@ -39,15 +39,24 @@ public final class Config {
 
     // --- Physics (ported verbatim) -------------------------------------------
     public static final float GRAVITY = 0.25f;
-    /** Base jump impulse; effective jump = JUMP_BASE - score/6000 (faster as you climb). */
-    public static final float JUMP_BASE = -13.6f;
+    /**
+     * Base jump impulse; effective jump = JUMP_BASE - score/6000 (faster as you
+     * climb). Slightly gentler than the original {@code -13.6} so the world
+     * scrolls a touch slower and hazards are easier to read.
+     */
+    public static final float JUMP_BASE = -12.2f;
     /** Multiplier applied to scroll the world down while the player ascends. */
     public static final float SCROLL_FACTOR = -1.2f;
     /** Horizontal speed multiplier applied to the tilt value: x += tilt * MOVE_FACTOR. */
     public static final float MOVE_FACTOR = -20f;
 
-    /** Player must be above this line (and ascending) before the world scrolls. */
-    public static final float SCROLL_THRESHOLD = WORLD_HEIGHT / 3f;
+    /**
+     * Player must be above this line (and ascending) before the world scrolls.
+     * The original used {@code height/3} (player parked in the top third); we
+     * keep the player lower (~45% down) so there is much more sky above to see
+     * incoming enemies — a readability tweak, not a physics one.
+     */
+    public static final float SCROLL_THRESHOLD = WORLD_HEIGHT * 0.45f;
 
     /** Lava platforms only start appearing once the score passes this. */
     public static final int LAVA_UNLOCK_SCORE = 600;
