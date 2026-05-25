@@ -115,15 +115,21 @@ public final class World {
         if (speed > 0 && jetpackTimer <= 0) {
             for (int i = 0; i < platforms.length; i++) {
                 Platform p = platforms[i];
-                if (CollisionSystem.lands(player, p)) {
-                    if (p.onLand(player)) {  // lava -> fatal (Strategy decides)
-                        gameOver = true;
+                if (!CollisionSystem.lands(player, p)) continue;
+
+                if (p.onLand(player)) {            // lava (Strategy flags it as a hazard)
+                    // Costs a life rather than killing outright; then bounce off.
+                    if (invulnTimer <= 0) loseLife();
+                    if (!gameOver) {               // launch back off the lava
+                        player.speed = Config.JUMP_BASE - (scores.getScore() / 6000f);
                     }
-                    if (p.hasSpring) {
-                        springBounce(p);
-                    } else {
-                        jump();
-                    }
+                    continue;
+                }
+
+                if (p.hasSpring) {
+                    springBounce(p);
+                } else {
+                    jump();
                     if (p.getBehavior() != null && p.getBehavior().breaksOnLand()) {
                         // Cracked platform: bounce, then shatter and recycle.
                         // Pass the old platform so the FX can draw its real texture.
@@ -152,7 +158,7 @@ public final class World {
         // Floating pickups (hearts, jetpacks).
         updatePickups();
 
-        // Fell off the bottom? Always fatal — lives only guard against creatures.
+        // Fell off the bottom? Always fatal — falling never spends a life.
         if (player.y > Config.WORLD_HEIGHT) {
             gameOver = true;
         }

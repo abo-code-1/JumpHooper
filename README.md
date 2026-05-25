@@ -83,9 +83,9 @@ license-clean:
   - **Jetpacks** are collectible pickups that grant ~4s of invulnerable upward
     flight (with a fuel bar) that plows through enemies.
   - **Hearts** are pickups that restore a life.
-  - **3 lives** (max 5): an enemy hit or boss shot costs a life with brief
-    invulnerability; falling off the bottom or touching lava is still instant
-    death — lives only guard against creatures, per design.
+  - **3 lives** (max 5): an enemy hit, a boss shot, or landing on lava costs a
+    life with brief invulnerability + a bounce off. Only falling off the bottom
+    is an instant death.
 
 These add three more patterns on top of the original six:
 
