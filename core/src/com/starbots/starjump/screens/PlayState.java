@@ -12,6 +12,7 @@ import com.starbots.starjump.Config;
 import com.starbots.starjump.ScoreManager;
 import com.starbots.starjump.StarJumpGame;
 import com.starbots.starjump.assets.Assets;
+import com.starbots.starjump.fx.BreakingPlatformFx;
 import com.starbots.starjump.fx.ParticleSystem;
 import com.starbots.starjump.fx.ScreenShake;
 import com.starbots.starjump.fx.SpaceBackground;
@@ -45,6 +46,7 @@ public final class PlayState implements GameState, GameEventListener {
 
     private final SpaceBackground background;
     private final ParticleSystem particles;
+    private final BreakingPlatformFx breakingFx;
     private final ScreenShake shake = new ScreenShake();
     private final Vector2 tmp = new Vector2();
 
@@ -60,6 +62,7 @@ public final class PlayState implements GameState, GameEventListener {
         this.world = new World(game.tilt(), bus);
         this.background = new SpaceBackground(a);
         this.particles = new ParticleSystem(a);
+        this.breakingFx = new BreakingPlatformFx(a);
     }
 
     @Override
@@ -69,6 +72,7 @@ public final class PlayState implements GameState, GameEventListener {
         deathHandled = false;
         deathTimer = 0f;
         particles.clear();
+        breakingFx.clear();
         bus.subscribe(this);
     }
 
@@ -102,6 +106,7 @@ public final class PlayState implements GameState, GameEventListener {
 
         background.update(delta, scrollDy);
         particles.update(delta);
+        breakingFx.update(delta);
         shake.update(delta);
 
         if (deathHandled) {
@@ -118,8 +123,11 @@ public final class PlayState implements GameState, GameEventListener {
                 particles.jumpSparkle(p.x + p.width / 2f, p.y + p.height);
                 break;
             case PLATFORM_BROKEN: {
-                Vector2 pos = asPos(event.payload, p);
-                particles.debris(pos.x, pos.y);
+                if (event.payload instanceof Platform) {
+                    Platform plat = (Platform) event.payload;
+                    breakingFx.shatter(plat.kind, plat.x, plat.y, plat.width, plat.height);
+                    particles.debris(plat.x + plat.width / 2f, plat.y + plat.height / 2f);
+                }
                 break;
             }
             case PLAYER_DIED:
@@ -170,6 +178,8 @@ public final class PlayState implements GameState, GameEventListener {
         for (Platform p : world.getPlatforms()) {
             painter.image(a.platform(p.kind), p.x, p.y, p.width, p.height);
         }
+
+        breakingFx.render(batch, Config.WORLD_HEIGHT);
 
         for (Enemy e : world.getEnemies()) {
             painter.image(enemyTexture(e.type), e.x, e.y, e.width, e.height);

@@ -104,8 +104,8 @@ public final class World {
                     jump();
                     if (p.getBehavior() != null && p.getBehavior().breaksOnLand()) {
                         // Cracked platform: bounce, then shatter and recycle.
-                        publish(GameEventType.PLATFORM_BROKEN,
-                                new Vector2(p.x + p.width / 2f, p.y + p.height / 2f));
+                        // Pass the old platform so the FX can draw its real texture.
+                        publish(GameEventType.PLATFORM_BROKEN, p);
                         float newX = MathUtils.random(0f, Config.WORLD_WIDTH - Config.PLATFORM_W);
                         platforms[i] = effectFactory.spawn(newX,
                                 highestPlatformY() - Config.PLATFORM_SPACING,
