@@ -57,6 +57,42 @@ out — here it's enabled through the Observer bus.
 
 ---
 
+## Enhancements (this branch)
+
+Beyond the MVP, the game now has a lot more life — all generated **procedurally**
+at runtime (no downloaded assets, no video codecs), so it stays portable and
+license-clean:
+
+- **Animated parallax space backdrop** — three depth layers of twinkling stars,
+  a drifting planet and occasional shooting stars, all parallax-scrolling with
+  the player's climb ([`fx/SpaceBackground`](core/src/com/starbots/starjump/fx/SpaceBackground.java)).
+- **Particle FX** — jump sparkles, lava embers and explosions, on a pooled
+  emitter ([`fx/ParticleSystem`](core/src/com/starbots/starjump/fx/ParticleSystem.java)).
+- **Screen shake** on death / hits ([`fx/ScreenShake`](core/src/com/starbots/starjump/fx/ScreenShake.java)).
+- **Player juice** — squash & stretch, lean, and a thruster flame.
+- **Synthesized sound effects** — jump/hit/explosion/powerup/boss/game-over,
+  generated as PCM at startup ([`audio/SfxSynth`](core/src/com/starbots/starjump/audio/SfxSynth.java))
+  and triggered through the event bus.
+- **Enemies** — drones and homing hunters that you stomp for points or die to on
+  contact ([`model/enemy`](core/src/com/starbots/starjump/model/enemy)).
+- **Boss fights** — a saucer that descends, sways and rains aimed projectiles;
+  bounce into it to damage it while dodging shots
+  ([`model/boss`](core/src/com/starbots/starjump/model/boss)).
+
+These add three more patterns on top of the original six:
+
+| Pattern | Where |
+|---|---|
+| **Strategy** (reused) | [`EnemyBehavior`](core/src/com/starbots/starjump/model/enemy/EnemyBehavior.java) → Drifter / SineFloater / Diver |
+| **Factory Method** (reused) | [`EnemyFactory`](core/src/com/starbots/starjump/model/enemy/EnemyFactory.java) → `StandardEnemyFactory` |
+| **State** (reused) | [`BossState`](core/src/com/starbots/starjump/model/boss/BossState.java) → Enter / Attack / Enrage |
+| **Object Pool** (new) | particles ([`ParticleSystem`](core/src/com/starbots/starjump/fx/ParticleSystem.java)) and boss projectiles (`World`), via libGDX `Pool` |
+| **Composite** (new, informal) | [`SpaceBackground`](core/src/com/starbots/starjump/fx/SpaceBackground.java) composes independent backdrop layers |
+
+> The animated backdrop replaces the "video background" idea: true video needs a
+> platform-specific native extension (`gdx-video`) that would complicate the
+> Android build, whereas the procedural starfield is reliable everywhere.
+
 ## Project layout
 
 ```

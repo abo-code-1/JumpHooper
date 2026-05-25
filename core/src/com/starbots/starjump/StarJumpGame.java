@@ -72,7 +72,7 @@ public final class StarJumpGame extends ApplicationAdapter {
         bus = new EventBus();
         ScoreManager.INSTANCE.init(bus);
 
-        soundController = new SoundController(assets.swoosh);
+        soundController = new SoundController(assets);
         achievementManager = new AchievementManager(bus);
         bus.subscribe(soundController);
         bus.subscribe(achievementManager);

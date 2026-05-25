@@ -3,6 +3,7 @@ package com.starbots.starjump;
 import com.starbots.starjump.input.TiltControl;
 import com.starbots.starjump.model.Player;
 import com.starbots.starjump.model.World;
+import com.starbots.starjump.model.boss.Boss;
 import com.starbots.starjump.model.platform.MovingBehavior;
 import com.starbots.starjump.model.platform.Platform;
 import com.starbots.starjump.model.platform.PlatformKind;
@@ -54,16 +55,18 @@ public final class SmokeTest {
         EventBus bus = new EventBus();
         final int[] jumpEvents = {0};
         final int[] deathEvents = {0};
+        final int[] bossSpawns = {0};
         bus.subscribe(new GameEventListener() {
             @Override public void onGameEvent(GameEvent e) {
                 if (e.type == GameEventType.PLAYER_JUMPED) jumpEvents[0]++;
                 if (e.type == GameEventType.PLAYER_DIED) deathEvents[0]++;
+                if (e.type == GameEventType.BOSS_SPAWNED) bossSpawns[0]++;
             }
         });
         ScoreManager.INSTANCE.init(bus);
 
         Autopilot autopilot = new Autopilot();
-        World world = new World(autopilot);
+        World world = new World(autopilot, bus);
         autopilot.world = world;
 
         int maxScore = 0;
@@ -93,6 +96,26 @@ public final class SmokeTest {
             ScoreManager.INSTANCE.endRun();
         }
 
+        // --- boss path (driven directly so it doesn't depend on the autopilot
+        //     surviving to score 1500) ---------------------------------------
+        World bossWorld = new World(autopilot, bus);
+        bossWorld.startRun();
+        ScoreManager.INSTANCE.addScore(1600);     // unlock the boss
+        bossWorld.step();                         // World should spawn it now
+        boolean bossSpawnedByWorld = bossWorld.getBoss() != null;
+
+        // Pump the boss state machine directly to exercise ENTER -> ATTACK -> ENRAGE.
+        Boss boss = new Boss(4, 190f);
+        boolean sawAttack = false, sawEnrage = false;
+        for (int i = 0; i < 900; i++) {
+            boss.update(bossWorld, 1f / 60f);
+            String st = boss.getState().name();
+            if ("ATTACK".equals(st)) sawAttack = true;
+            if (i == 300) boss.hp = 1;            // drop to low HP -> should enrage
+            if ("ENRAGE".equals(st)) sawEnrage = true;
+        }
+        boolean projectilesFired = bossWorld.getProjectiles().size > 0;
+
         System.out.println("=== StarJump simulation smoke test ===");
         System.out.println("games:            " + games);
         System.out.println("total steps:      " + totalSteps);
@@ -103,6 +126,9 @@ public final class SmokeTest {
         System.out.println("death events:     " + deathEvents[0]);
         System.out.println("lifetime jumps:   " + ScoreManager.INSTANCE.getTotalJumps());
         System.out.println("platform kinds:   " + kindSeen);
+        System.out.println("boss spawned:     world=" + bossSpawnedByWorld + " events=" + bossSpawns[0]);
+        System.out.println("boss states:      attack=" + sawAttack + " enrage=" + sawEnrage
+                + " projectiles=" + projectilesFired);
 
         boolean ok = true;
         ok &= check("player jumped", jumpEvents[0] > 0);
@@ -116,6 +142,9 @@ public final class SmokeTest {
         ok &= check("moving platforms appear (Strategy effect roll)", movingSeen[0]);
         ok &= check("lava platforms appear after 600", kindSeen.getOrDefault(PlatformKind.LAVA, 0) > 0);
         ok &= check("games actually end", gamesOver > 0);
+        ok &= check("boss spawns past its threshold", bossSpawnedByWorld && bossSpawns[0] > 0);
+        ok &= check("boss reaches ATTACK + ENRAGE states", sawAttack && sawEnrage);
+        ok &= check("boss fires projectiles", projectilesFired);
 
         System.out.println(ok ? "\nSMOKE TEST PASSED" : "\nSMOKE TEST FAILED");
         if (!ok) System.exit(1);

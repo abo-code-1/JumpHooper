@@ -1,16 +1,25 @@
 package com.starbots.starjump.model;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Pool;
 
 import com.starbots.starjump.Config;
 import com.starbots.starjump.ScoreManager;
 import com.starbots.starjump.input.TiltControl;
+import com.starbots.starjump.model.boss.Boss;
+import com.starbots.starjump.model.enemy.Enemy;
+import com.starbots.starjump.model.enemy.EnemyFactory;
+import com.starbots.starjump.model.enemy.StandardEnemyFactory;
 import com.starbots.starjump.model.platform.EffectPlatformFactory;
 import com.starbots.starjump.model.platform.PlainPlatformFactory;
 import com.starbots.starjump.model.platform.Platform;
 import com.starbots.starjump.model.platform.PlatformFactory;
 import com.starbots.starjump.model.platform.PlatformKind;
 import com.starbots.starjump.model.platform.SpawnContext;
+import com.starbots.starjump.patterns.observer.EventBus;
+import com.starbots.starjump.patterns.observer.GameEventType;
 import com.starbots.starjump.physics.CollisionSystem;
 
 /**
@@ -28,6 +37,7 @@ import com.starbots.starjump.physics.CollisionSystem;
 public final class World {
 
     private final TiltControl tilt;
+    private final EventBus bus;
     private final ScoreManager scores = ScoreManager.INSTANCE;
 
     private final PlatformFactory plainFactory = new PlainPlatformFactory();
@@ -37,16 +47,35 @@ public final class World {
     private final Player player = new Player();
     private final Platform[] platforms = new Platform[Config.PLATFORM_COUNT];
 
+    private final EnemyFactory enemyFactory = new StandardEnemyFactory();
+    private final Array<Enemy> enemies = new Array<>();
+
+    private Boss boss;
+    private int nextBossScore = FIRST_BOSS_SCORE;
+    private final Array<Projectile> projectiles = new Array<>();
+    private final Pool<Projectile> projectilePool = new Pool<Projectile>() {
+        @Override protected Projectile newObject() { return new Projectile(); }
+    };
+
     private boolean gameOver;
 
-    public World(TiltControl tilt) {
+    /** How far the world scrolled this step (>= 0); drives background parallax. */
+    private float lastScrollDy;
+
+    public World(TiltControl tilt, EventBus bus) {
         this.tilt = tilt;
+        this.bus = bus;
     }
 
     /** Mirrors {@code reset()} + the initial entity layout from App.js. */
     public void startRun() {
         scores.startRun();
         player.reset();
+        enemies.clear();
+        boss = null;
+        nextBossScore = FIRST_BOSS_SCORE;
+        projectilePool.freeAll(projectiles);
+        projectiles.clear();
         gameOver = false;
         float max = Config.WORLD_WIDTH - Config.PLATFORM_W; // randomW(60)
         for (int i = 0; i < platforms.length; i++) {
@@ -60,6 +89,7 @@ public final class World {
     public void step() {
         if (gameOver) return;
 
+        lastScrollDy = 0f;
         final float velocityX = tilt.getTilt();
         final float speed = player.speed; // captured at frame start, exactly like the original
 
@@ -79,6 +109,13 @@ public final class World {
         for (Platform p : platforms) {
             p.update();
         }
+
+        // Enemies move (Strategy) and interact with the player.
+        updateEnemies();
+
+        // Boss (State machine) + its projectiles.
+        updateBoss();
+        updateProjectiles();
 
         // Fell off the bottom?
         if (player.y > Config.WORLD_HEIGHT) {
@@ -116,8 +153,120 @@ public final class World {
         scores.registerJump();
     }
 
+    private static final int ENEMY_UNLOCK_SCORE = 300;
+    private static final int MAX_ENEMIES = 3;
+
+    /** Move enemies, despawn off-screen ones, and resolve player collisions. */
+    private void updateEnemies() {
+        for (int i = enemies.size - 1; i >= 0; i--) {
+            Enemy e = enemies.get(i);
+            e.update(player, Config.STEP);
+
+            if (e.y > Config.WORLD_HEIGHT + 60) {     // drifted off the bottom
+                enemies.removeIndex(i);
+                continue;
+            }
+
+            if (overlaps(e)) {
+                boolean stomp = player.speed > 0 && player.bottom() <= e.y + e.height * 0.6f;
+                if (stomp) {
+                    jump();                            // bounce off the enemy
+                    scores.addScore(50);
+                    publish(GameEventType.ENEMY_KILLED, new Vector2(e.centerX(), e.centerY()));
+                    enemies.removeIndex(i);
+                } else {
+                    gameOver = true;                   // ran into it sideways/below
+                }
+            }
+        }
+    }
+
+    private boolean overlaps(Enemy e) {
+        return player.x < e.right()
+            && player.x + player.width > e.x
+            && player.y < e.bottom()
+            && player.bottom() > e.y;
+    }
+
+    // --- boss ------------------------------------------------------------------
+
+    private static final int FIRST_BOSS_SCORE = 1500;
+    private static final int BOSS_RESPAWN_GAP = 3000;
+    private static final int BOSS_HP = 4;
+    private static final float BOSS_HOVER_Y = 190f;
+    private static final float BOSS_BOUNCE = 7f;
+
+    /** Spawn / advance the boss; the player damages it by bouncing into it. */
+    private void updateBoss() {
+        if (boss == null) {
+            if (scores.getScore() >= nextBossScore) {
+                boss = new Boss(BOSS_HP, BOSS_HOVER_Y);
+                publish(GameEventType.BOSS_SPAWNED, new Vector2(boss.centerX(), boss.centerY()));
+            }
+            return;
+        }
+
+        boss.update(this, Config.STEP);
+
+        if (boss.entered && boss.hitCooldown <= 0 && playerHitsBoss()) {
+            boss.hp--;
+            boss.flash = 0.16f;
+            boss.hitCooldown = 0.45f;
+            player.speed = BOSS_BOUNCE; // knocked back downward
+            if (boss.hp <= 0) {
+                publish(GameEventType.BOSS_DEFEATED, new Vector2(boss.centerX(), boss.centerY()));
+                scores.addScore(500);
+                nextBossScore = scores.getScore() + BOSS_RESPAWN_GAP;
+                boss = null;
+            } else {
+                publish(GameEventType.BOSS_HIT, new Vector2(boss.centerX(), boss.centerY()));
+            }
+        }
+    }
+
+    private boolean playerHitsBoss() {
+        return player.x < boss.right()
+            && player.x + player.width > boss.x
+            && player.y < boss.bottom()
+            && player.bottom() > boss.y;
+    }
+
+    /** Spawned by the boss states via {@link com.starbots.starjump.model.boss.BossState}. */
+    public void spawnProjectile(float x, float y, float vx, float vy) {
+        Projectile pr = projectilePool.obtain();
+        pr.x = x; pr.y = y; pr.vx = vx; pr.vy = vy;
+        projectiles.add(pr);
+    }
+
+    private void updateProjectiles() {
+        for (int i = projectiles.size - 1; i >= 0; i--) {
+            Projectile pr = projectiles.get(i);
+            pr.x += pr.vx * Config.STEP;
+            pr.y += pr.vy * Config.STEP;
+
+            boolean offscreen = pr.y > Config.WORLD_HEIGHT + 30
+                    || pr.x < -30 || pr.x > Config.WORLD_WIDTH + 30;
+            if (offscreen) {
+                projectilePool.free(pr);
+                projectiles.removeIndex(i);
+                continue;
+            }
+            // Circle (projectile) vs AABB (player): a hit ends the run.
+            if (player.x < pr.x + pr.radius && player.x + player.width > pr.x - pr.radius
+                    && player.y < pr.y + pr.radius && player.bottom() > pr.y - pr.radius) {
+                gameOver = true;
+            }
+        }
+    }
+
+    private void publish(GameEventType type, Object payload) {
+        if (bus != null) bus.publish(type, payload);
+    }
+
     /** Ported from {@code up()}: scroll platforms down, recycle, add score. */
     private void scrollWorld(float speed) {
+        float dy = speed * Config.SCROLL_FACTOR; // speed<0 * -1.2 => moves down (>0)
+        lastScrollDy = dy;
         float max = Config.WORLD_WIDTH - Config.PLATFORM_W;
         for (int i = 0; i < platforms.length; i++) {
             Platform p = platforms[i];
@@ -130,6 +279,19 @@ public final class World {
                         spawnCtx.set(scores.getScore(), lavaAllowed));
             }
         }
+        // Enemies scroll with the world.
+        for (Enemy e : enemies) {
+            e.y += dy;
+        }
+
+        // Occasionally spawn a new enemy from the top once unlocked
+        // (suppressed while a boss is on screen).
+        if (boss == null && scores.getScore() > ENEMY_UNLOCK_SCORE && enemies.size < MAX_ENEMIES
+                && MathUtils.random() < 0.012f) {
+            float ex = MathUtils.random(0f, Config.WORLD_WIDTH - 46f);
+            enemies.add(enemyFactory.spawn(ex, -40f, scores.getScore()));
+        }
+
         // score += -speed/5, rounded each frame (see ScoreManager).
         scores.addScore(Math.round(-speed / 5f));
     }
@@ -141,7 +303,11 @@ public final class World {
         return false;
     }
 
-    public Player getPlayer()        { return player; }
-    public Platform[] getPlatforms() { return platforms; }
-    public boolean isGameOver()      { return gameOver; }
+    public Player getPlayer()                { return player; }
+    public Platform[] getPlatforms()         { return platforms; }
+    public Array<Enemy> getEnemies()         { return enemies; }
+    public Boss getBoss()                    { return boss; }
+    public Array<Projectile> getProjectiles(){ return projectiles; }
+    public boolean isGameOver()              { return gameOver; }
+    public float getLastScrollDy()           { return lastScrollDy; }
 }

@@ -11,5 +11,14 @@ public enum GameEventType {
     /** A new high score was set during the last run. Payload: the record (Integer). */
     NEW_RECORD,
     /** A curiosity/achievement milestone was reached. Payload: milestone value (Integer). */
-    ACHIEVEMENT_UNLOCKED
+    ACHIEVEMENT_UNLOCKED,
+
+    /** An enemy was stomped/destroyed. Payload: world position (Vector2). */
+    ENEMY_KILLED,
+    /** A boss entered the arena. Payload: world position (Vector2). */
+    BOSS_SPAWNED,
+    /** The boss took a hit. Payload: world position (Vector2). */
+    BOSS_HIT,
+    /** The boss was defeated. Payload: world position (Vector2). */
+    BOSS_DEFEATED
 }

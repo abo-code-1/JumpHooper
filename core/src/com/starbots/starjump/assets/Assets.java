@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFont
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ObjectMap;
 
+import com.starbots.starjump.audio.SfxSynth;
 import com.starbots.starjump.model.platform.PlatformKind;
 
 /**
@@ -38,8 +39,16 @@ public final class Assets implements Disposable {
     public Texture starbots;
     private final ObjectMap<PlatformKind, Texture> platformTextures = new ObjectMap<>();
 
+    // Procedurally generated art
+    public Texture glow;        // soft white glow: stars, particles, projectiles, thruster
+    public Texture enemyDrone;
+    public Texture enemyHunter;
+    public Texture bossSprite;
+
     // Sound
     public Sound swoosh;
+    // Synthesized SFX (may be null if synthesis failed; always used null-safely)
+    public Sound sfxJump, sfxLand, sfxHit, sfxExplosion, sfxPowerup, sfxBoss, sfxGameOver;
 
     // Font generators + cache
     private final ObjectMap<String, FreeTypeFontGenerator> generators = new ObjectMap<>();
@@ -65,6 +74,21 @@ public final class Assets implements Disposable {
         platformTextures.put(PlatformKind.LAVA,         texture("ground_lava.png"));
 
         swoosh = Gdx.audio.newSound(Gdx.files.internal("swoosh.mp3"));
+
+        // Procedural sprites.
+        glow        = PixelArt.softGlow(64);
+        enemyDrone  = PixelArt.fromPattern(SpritePatterns.DRONE, 6, SpritePatterns.DRONE_PALETTE);
+        enemyHunter = PixelArt.fromPattern(SpritePatterns.HUNTER, 6, SpritePatterns.HUNTER_PALETTE);
+        bossSprite  = PixelArt.fromPattern(SpritePatterns.BOSS, 8, SpritePatterns.BOSS_PALETTE);
+
+        // Synthesized sound effects.
+        sfxJump      = SfxSynth.jump();
+        sfxLand      = SfxSynth.land();
+        sfxHit       = SfxSynth.hit();
+        sfxExplosion = SfxSynth.explosion();
+        sfxPowerup   = SfxSynth.powerup();
+        sfxBoss      = SfxSynth.boss();
+        sfxGameOver  = SfxSynth.gameOver();
 
         registerGenerator(NASALIZATION, "fonts/nasalization.ttf");
         registerGenerator(THALEAH, "fonts/ThaleahFat.ttf");
@@ -114,8 +138,19 @@ public final class Assets implements Disposable {
         logo.dispose();
         starbots.dispose();
         for (Texture t : platformTextures.values()) t.dispose();
-        if (swoosh != null) swoosh.dispose();
+        glow.dispose();
+        enemyDrone.dispose();
+        enemyHunter.dispose();
+        bossSprite.dispose();
+        disposeSound(swoosh);
+        disposeSound(sfxJump); disposeSound(sfxLand); disposeSound(sfxHit);
+        disposeSound(sfxExplosion); disposeSound(sfxPowerup); disposeSound(sfxBoss);
+        disposeSound(sfxGameOver);
         for (BitmapFont f : fontCache.values()) f.dispose();
         for (FreeTypeFontGenerator g : generators.values()) g.dispose();
+    }
+
+    private static void disposeSound(Sound s) {
+        if (s != null) s.dispose();
     }
 }
