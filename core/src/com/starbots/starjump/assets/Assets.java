@@ -106,8 +106,13 @@ public final class Assets implements Disposable {
     }
 
     private Texture texture(String path) {
-        Texture t = new Texture(Gdx.files.internal(path), true);
-        t.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.Linear);
+        // No mipmaps: every art file is non-power-of-two, and OpenGL ES (iOS)
+        // renders an NPOT texture with a mipmap min-filter as fully transparent
+        // — which made the astronaut, platforms and nebula invisible on device
+        // while the POT procedural sprites still showed. Plain bilinear works on
+        // both desktop GL and GLES and is plenty for the mild minification here.
+        Texture t = new Texture(Gdx.files.internal(path));
+        t.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         return t;
     }
 

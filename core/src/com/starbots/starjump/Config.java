@@ -16,9 +16,39 @@ package com.starbots.starjump;
 public final class Config {
     private Config() {}
 
-    /** Virtual world size. Roughly a portrait phone; the original used live device dp. */
+    /**
+     * Virtual world size. Width is fixed; <b>height adapts to the real device
+     * aspect ratio</b> at startup (see {@link #adaptToScreen}) so the game fills
+     * the screen with no letterbox bars. The 432×768 defaults match the original
+     * and are what the headless tests and desktop fall back to. These are
+     * intentionally <i>not</i> {@code final}: a compile-time constant would be
+     * inlined into every call site and could never be retuned for the device.
+     */
     public static final float WORLD_WIDTH  = 432f;
-    public static final float WORLD_HEIGHT = 768f;
+    public static       float WORLD_HEIGHT = 768f;
+
+    /**
+     * Stretch {@link #WORLD_HEIGHT} to match the device's aspect ratio so a tall
+     * phone screen is filled top-to-bottom instead of letterboxed. Width stays
+     * pinned at {@link #WORLD_WIDTH}; every gameplay and UI position is expressed
+     * relative to these two values, so a taller world simply reveals more sky and
+     * pushes the death line / bottom-anchored UI down to the true screen edge —
+     * nothing needs to move. Clamped so unusual screens stay laid out sanely.
+     *
+     * <p>Call once at startup, before any screen or {@code World} is built. Left
+     * uncalled (headless tests), the 768 default keeps behaviour identical.</p>
+     *
+     * @param screenW drawing-buffer width in px
+     * @param screenH drawing-buffer height in px
+     */
+    public static void adaptToScreen(int screenW, int screenH) {
+        if (screenW <= 0 || screenH <= 0) return;
+        float h = WORLD_WIDTH * ((float) screenH / (float) screenW);
+        // Never shorter than the original (keeps wide/desktop windows unchanged);
+        // cap extra-tall phones so vertical spacing doesn't stretch absurdly.
+        WORLD_HEIGHT = Math.max(768f, Math.min(h, 1024f));
+        SCROLL_THRESHOLD = WORLD_HEIGHT * 0.45f;
+    }
 
     /** Simulation runs at a fixed 60 Hz step — the original constants are per-frame. */
     public static final float STEP = 1f / 60f;
@@ -62,7 +92,7 @@ public final class Config {
      * keep the player lower (~45% down) so there is much more sky above to see
      * incoming enemies — a readability tweak, not a physics one.
      */
-    public static final float SCROLL_THRESHOLD = WORLD_HEIGHT * 0.45f;
+    public static float SCROLL_THRESHOLD = WORLD_HEIGHT * 0.45f;
 
     /** Lava platforms only start appearing once the score passes this. */
     public static final int LAVA_UNLOCK_SCORE = 600;

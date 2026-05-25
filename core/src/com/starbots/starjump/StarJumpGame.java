@@ -58,6 +58,10 @@ public final class StarJumpGame extends ApplicationAdapter {
 
     @Override
     public void create() {
+        // Stretch the virtual world height to the real screen aspect first, so
+        // the FitViewport fills the device top-to-bottom with no letterbox bars.
+        Config.adaptToScreen(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
         camera = new OrthographicCamera();
         viewport = new FitViewport(Config.WORLD_WIDTH, Config.WORLD_HEIGHT, camera);
 

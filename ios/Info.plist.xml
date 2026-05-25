@@ -22,6 +22,15 @@
 	<string>${app.build}</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!--
+	  An (empty) UILaunchScreen dict is the modern, ibtool-free way to tell iOS
+	  to render at the device's native resolution. Without it the app runs in a
+	  scaled-down legacy size and does not fill the screen. A compiled
+	  LaunchScreen.storyboard would also work, but this Xcode's ibtool can't
+	  compile one ("iOS Platform Not Installed" — no iOS runtime installed).
+	-->
+	<key>UILaunchScreen</key>
+	<dict/>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>
