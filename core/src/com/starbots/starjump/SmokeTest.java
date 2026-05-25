@@ -100,7 +100,7 @@ public final class SmokeTest {
         //     surviving to score 1500) ---------------------------------------
         World bossWorld = new World(autopilot, bus);
         bossWorld.startRun();
-        ScoreManager.INSTANCE.addScore(1600);     // unlock the boss
+        ScoreManager.INSTANCE.addScore(3000);     // unlock the boss (threshold 2800)
         bossWorld.step();                         // World should spawn it now
         boolean bossSpawnedByWorld = bossWorld.getBoss() != null;
 

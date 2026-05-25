@@ -153,8 +153,10 @@ public final class World {
         scores.registerJump();
     }
 
-    private static final int ENEMY_UNLOCK_SCORE = 300;
-    private static final int MAX_ENEMIES = 3;
+    private static final int ENEMY_UNLOCK_SCORE = 1200;   // peaceful early game
+    private static final int MAX_ENEMIES = 2;
+    /** Contact is only lethal once the player has clearly overlapped the enemy. */
+    private static final float HIT_INSET = 0.22f;
 
     /** Move enemies, despawn off-screen ones, and resolve player collisions. */
     private void updateEnemies() {
@@ -168,7 +170,9 @@ public final class World {
             }
 
             if (overlaps(e)) {
-                boolean stomp = player.speed > 0 && player.bottom() <= e.y + e.height * 0.6f;
+                // Generous "from above" stomp: any descending contact near the
+                // upper half counts as a bounce rather than a death.
+                boolean stomp = player.speed > 0 && player.bottom() <= e.centerY() + e.height * 0.3f;
                 if (stomp) {
                     jump();                            // bounce off the enemy
                     scores.addScore(50);
@@ -182,16 +186,19 @@ public final class World {
     }
 
     private boolean overlaps(Enemy e) {
-        return player.x < e.right()
-            && player.x + player.width > e.x
-            && player.y < e.bottom()
-            && player.bottom() > e.y;
+        // Shrink the enemy's lethal box so glancing near-misses don't kill.
+        float mx = e.width * HIT_INSET;
+        float my = e.height * HIT_INSET;
+        return player.x < e.right() - mx
+            && player.x + player.width > e.x + mx
+            && player.y < e.bottom() - my
+            && player.bottom() > e.y + my;
     }
 
     // --- boss ------------------------------------------------------------------
 
-    private static final int FIRST_BOSS_SCORE = 1500;
-    private static final int BOSS_RESPAWN_GAP = 3000;
+    private static final int FIRST_BOSS_SCORE = 2800;
+    private static final int BOSS_RESPAWN_GAP = 4000;
     private static final int BOSS_HP = 4;
     private static final float BOSS_HOVER_Y = 190f;
     private static final float BOSS_BOUNCE = 7f;
@@ -285,11 +292,12 @@ public final class World {
         }
 
         // Occasionally spawn a new enemy from the top once unlocked
-        // (suppressed while a boss is on screen).
+        // (suppressed while a boss is on screen). Spawned high above the screen
+        // so it scrolls into view gradually instead of ambushing the player.
         if (boss == null && scores.getScore() > ENEMY_UNLOCK_SCORE && enemies.size < MAX_ENEMIES
-                && MathUtils.random() < 0.012f) {
+                && MathUtils.random() < 0.005f) {
             float ex = MathUtils.random(0f, Config.WORLD_WIDTH - 46f);
-            enemies.add(enemyFactory.spawn(ex, -40f, scores.getScore()));
+            enemies.add(enemyFactory.spawn(ex, -90f, scores.getScore()));
         }
 
         // score += -speed/5, rounded each frame (see ScoreManager).

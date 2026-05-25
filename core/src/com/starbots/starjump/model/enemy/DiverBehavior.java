@@ -8,8 +8,8 @@ public final class DiverBehavior implements EnemyBehavior {
     public static final DiverBehavior INSTANCE = new DiverBehavior();
     private DiverBehavior() {}
 
-    private static final float HOMING_SPEED = 70f;
-    private static final float DESCENT = 22f;
+    private static final float HOMING_SPEED = 42f;
+    private static final float DESCENT = 12f;
 
     @Override
     public void update(Enemy e, Player player, float dt) {
