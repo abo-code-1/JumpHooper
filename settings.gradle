@@ -25,3 +25,15 @@ if (hasAndroidSdk) {
     println '[StarJump] No Android SDK -> :android module skipped (desktop build only). ' +
             'Set sdk.dir in local.properties or export ANDROID_HOME to enable it.'
 }
+
+// The :ios module (RoboVM/MobiVM) is only included on macOS with Xcode.app
+// present, so it never disturbs desktop/Android builds elsewhere. Building it
+// also needs a JDK 8-17 (the RoboVM compiler does not support JDK 23+).
+boolean isMac = System.getProperty('os.name').toLowerCase().contains('mac')
+boolean hasXcode = new File('/Applications/Xcode.app').exists()
+if (isMac && hasXcode) {
+    include 'ios'
+    println '[StarJump] macOS + Xcode detected -> :ios module enabled (tilt controls).'
+} else {
+    println '[StarJump] No macOS/Xcode -> :ios module skipped.'
+}
