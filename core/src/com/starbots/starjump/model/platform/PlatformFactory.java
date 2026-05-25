@@ -38,4 +38,13 @@ public abstract class PlatformFactory {
             default: return PlatformKind.STONE_BROKEN;
         }
     }
+
+    /** Pick an intact (non-cracked) ground texture. */
+    protected final PlatformKind randomSolidGround() {
+        return MathUtils.randomBoolean() ? PlatformKind.GRASS : PlatformKind.STONE;
+    }
+
+    protected static boolean isCracked(PlatformKind kind) {
+        return kind == PlatformKind.GRASS_BROKEN || kind == PlatformKind.STONE_BROKEN;
+    }
 }

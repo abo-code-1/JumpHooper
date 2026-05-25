@@ -24,6 +24,7 @@ public final class SoundController implements GameEventListener {
     public void onGameEvent(GameEvent event) {
         switch (event.type) {
             case PLAYER_JUMPED:   play(assets.sfxJump, 0.5f);   break;
+            case PLATFORM_BROKEN: play(assets.sfxLand, 0.6f);   break;
             case ENEMY_KILLED:    play(assets.sfxHit, 0.7f);    break;
             case BOSS_SPAWNED:    play(assets.sfxBoss, 0.9f);   break;
             case BOSS_HIT:        play(assets.sfxHit, 0.8f);    break;

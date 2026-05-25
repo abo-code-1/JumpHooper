@@ -95,12 +95,22 @@ public final class World {
 
         // Landing is only tested while falling.
         if (speed > 0) {
-            for (Platform p : platforms) {
+            for (int i = 0; i < platforms.length; i++) {
+                Platform p = platforms[i];
                 if (CollisionSystem.lands(player, p)) {
                     if (p.onLand(player)) {  // lava -> fatal (Strategy decides)
                         gameOver = true;
                     }
                     jump();
+                    if (p.getBehavior() != null && p.getBehavior().breaksOnLand()) {
+                        // Cracked platform: bounce, then shatter and recycle.
+                        publish(GameEventType.PLATFORM_BROKEN,
+                                new Vector2(p.x + p.width / 2f, p.y + p.height / 2f));
+                        float newX = MathUtils.random(0f, Config.WORLD_WIDTH - Config.PLATFORM_W);
+                        platforms[i] = effectFactory.spawn(newX,
+                                highestPlatformY() - Config.PLATFORM_SPACING,
+                                spawnCtx.set(scores.getScore(), !anyLava()));
+                    }
                 }
             }
         }

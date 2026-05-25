@@ -117,6 +117,11 @@ public final class PlayState implements GameState, GameEventListener {
             case PLAYER_JUMPED:
                 particles.jumpSparkle(p.x + p.width / 2f, p.y + p.height);
                 break;
+            case PLATFORM_BROKEN: {
+                Vector2 pos = asPos(event.payload, p);
+                particles.debris(pos.x, pos.y);
+                break;
+            }
             case PLAYER_DIED:
                 particles.explosion(p.x + p.width / 2f, p.y + p.height / 2f, 1f, 0.7f, 0.25f, 40);
                 shake.shake(18f, 0.5f);

@@ -15,4 +15,12 @@ public interface PlatformBehavior {
      *         (i.e. lava); {@code false} for a normal bounce.
      */
     boolean onLand(Platform platform, Player player);
+
+    /**
+     * @return {@code true} if the platform shatters after one bounce (cracked
+     *         platforms). The World handles the actual break.
+     */
+    default boolean breaksOnLand() {
+        return false;
+    }
 }

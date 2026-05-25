@@ -68,6 +68,18 @@ public final class ParticleSystem {
         }
     }
 
+    /** Earthy debris that falls (a platform crumbling). */
+    public void debris(float x, float y) {
+        for (int i = 0; i < 12; i++) {
+            float ang = MathUtils.random(0f, MathUtils.PI2);
+            float spd = MathUtils.random(30f, 130f);
+            float shade = MathUtils.random(0.45f, 0.7f);
+            emit(x, y, MathUtils.cos(ang) * spd, MathUtils.sin(ang) * spd,
+                    MathUtils.random(0.3f, 0.6f), MathUtils.random(6f, 13f),
+                    420f, shade, shade * 0.7f, shade * 0.4f);
+        }
+    }
+
     /** A big radial explosion (death, enemy kill, boss hit). */
     public void explosion(float x, float y, float r, float g, float b, int count) {
         for (int i = 0; i < count; i++) {

@@ -43,11 +43,14 @@ public final class EffectPlatformFactory extends PlatformFactory {
         int sum = Math.max(Math.round(ctx.score / 1000f), 4);
         int effect = Math.round(MathUtils.random() * 10f) + sum;
 
-        p.kind = randomGround();
-        if (effect <= 7) {
-            p.setBehavior(StaticBehavior.INSTANCE);
-        } else {
+        if (effect > 7) {
+            // Moving platforms stay intact-looking.
+            p.kind = randomSolidGround();
             p.setBehavior(MovingBehavior.INSTANCE);
+        } else {
+            // Static slot: a cracked texture means it actually breaks.
+            p.kind = randomGround();
+            p.setBehavior(isCracked(p.kind) ? BreakableBehavior.INSTANCE : StaticBehavior.INSTANCE);
         }
         return p;
     }

@@ -10,7 +10,7 @@ public final class PlainPlatformFactory extends PlatformFactory {
     @Override
     protected Platform create(SpawnContext ctx) {
         Platform p = new Platform();
-        p.kind = randomGround();
+        p.kind = randomSolidGround();          // opening platforms are always solid
         p.setBehavior(StaticBehavior.INSTANCE);
         return p;
     }

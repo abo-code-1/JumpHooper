@@ -13,6 +13,9 @@ public enum GameEventType {
     /** A curiosity/achievement milestone was reached. Payload: milestone value (Integer). */
     ACHIEVEMENT_UNLOCKED,
 
+    /** A cracked platform shattered after a bounce. Payload: world position (Vector2). */
+    PLATFORM_BROKEN,
+
     /** An enemy was stomped/destroyed. Payload: world position (Vector2). */
     ENEMY_KILLED,
     /** A boss entered the arena. Payload: world position (Vector2). */
