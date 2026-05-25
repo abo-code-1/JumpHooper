@@ -127,6 +127,21 @@ public final class Painter {
         shapes.rect(left + w - t, y, t, h);         // right
     }
 
+    // --- device safe area ------------------------------------------------------
+
+    /**
+     * Top safe-area inset (notch / Dynamic Island status region) expressed in
+     * y-down world units, so it can be added directly to a top-anchored
+     * {@code top} value to keep UI clear of the cutout. Returns 0 on hardware
+     * with no inset (desktop), so callers stay device-agnostic.
+     */
+    public float safeTopInset() {
+        int bufferHeight = Gdx.graphics.getBackBufferHeight();
+        if (bufferHeight <= 0) return 0f;
+        float world = Gdx.graphics.getSafeInsetTop() * Config.WORLD_HEIGHT / bufferHeight;
+        return Math.min(world, 120f); // guard against any unexpectedly large report
+    }
+
     // --- input (top-down world coords) ----------------------------------------
 
     /** Current pointer position in y-down world coordinates. */

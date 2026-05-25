@@ -57,6 +57,18 @@ public final class ParticleSystem {
         }
     }
 
+    /** Big, bright pop when launching off a spring — a clear "boing!" burst. */
+    public void springBurst(float x, float y) {
+        for (int i = 0; i < 22; i++) {
+            float ang = MathUtils.random(0f, MathUtils.PI2);
+            float spd = MathUtils.random(80f, 250f);
+            // Bias the burst upward (negative vy = up on screen); gravity arcs it back.
+            emit(x, y, MathUtils.cos(ang) * spd, MathUtils.sin(ang) * spd - 140f,
+                    MathUtils.random(0.3f, 0.65f), MathUtils.random(7f, 16f),
+                    300f, 0.55f, 0.95f, 1f); // bright cyan-white
+        }
+    }
+
     /** Fiery embers (lava landing). */
     public void embers(float x, float y) {
         for (int i = 0; i < 12; i++) {

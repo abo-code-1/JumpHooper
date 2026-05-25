@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -158,9 +159,8 @@ public final class PlayState implements GameState, GameEventListener {
             }
             case SPRING_BOUNCE: {
                 Vector2 pos = asPos(event.payload, p);
-                particles.jumpSparkle(pos.x, pos.y);
-                particles.jumpSparkle(pos.x, pos.y);
-                shake.shake(5f, 0.15f);
+                particles.springBurst(pos.x, pos.y);
+                shake.shake(9f, 0.22f);
                 break;
             }
             case LIFE_LOST:
@@ -195,6 +195,7 @@ public final class PlayState implements GameState, GameEventListener {
         cam.update();
 
         Player player = world.getPlayer();
+        float safeTop = painter.safeTopInset(); // keep the HUD clear of the notch
 
         painter.begin();
         background.render(batch);
@@ -202,7 +203,7 @@ public final class PlayState implements GameState, GameEventListener {
         for (Platform p : world.getPlatforms()) {
             painter.image(a.platform(p.kind), p.x, p.y, p.width, p.height);
             if (p.hasSpring) {
-                painter.image(a.spring, p.centerX() - 12f, p.y - 22f, 24f, 26f);
+                drawSpring(p);
             }
         }
 
@@ -225,8 +226,9 @@ public final class PlayState implements GameState, GameEventListener {
 
         painter.textCentered(a.font(Assets.NASALIZATION, 32),
                 String.valueOf(ScoreManager.INSTANCE.getScore()),
-                Config.WORLD_WIDTH / 2f, 30f);
-        drawHud(batch);
+                Config.WORLD_WIDTH / 2f, 30f + safeTop);
+        drawHud(batch, safeTop);
+        drawBossHint(safeTop);
         painter.end();
 
         // Reset camera to centre.
@@ -254,10 +256,10 @@ public final class PlayState implements GameState, GameEventListener {
         }
     }
 
-    private void drawHud(SpriteBatch batch) {
-        // Lives as hearts, top-left.
+    private void drawHud(SpriteBatch batch, float safeTop) {
+        // Lives as hearts, top-left — pushed below the notch / status region.
         batch.setColor(1f, 1f, 1f, 1f);
-        float hx = 12f, hy = 16f, hs = 22f;
+        float hx = 12f, hy = 16f + safeTop, hs = 22f;
         for (int i = 0; i < world.getLives(); i++) {
             painter.image(a.heart, hx + i * (hs + 4f), hy, hs, hs * 0.9f);
         }
@@ -265,7 +267,7 @@ public final class PlayState implements GameState, GameEventListener {
         // Jetpack fuel bar (glowy), under the hearts, while flying.
         if (world.isJetpackActive()) {
             float frac = MathUtils.clamp(world.getJetpackTimer() / Config.JETPACK_DURATION, 0f, 1f);
-            float bx = 12f, by = 46f, bw = 132f, bh = 12f;
+            float bx = 12f, by = 46f + safeTop, bw = 132f, bh = 12f;
             float topY = Config.WORLD_HEIGHT - by - bh;
             batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
             batch.setColor(0.2f, 0.2f, 0.25f, 0.7f);
@@ -275,6 +277,31 @@ public final class PlayState implements GameState, GameEventListener {
             batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
             batch.setColor(1f, 1f, 1f, 1f);
         }
+    }
+
+    /** Spring sprite, anchored to the platform, with a squash/pop on bounce. */
+    private void drawSpring(Platform p) {
+        float baseBottom = p.y - 22f + 26f;   // y-down bottom edge, resting on the platform
+        float scaleX = 1f, scaleY = 1f;
+        if (p.springAnim > 0f) {
+            float t = 1f - p.springAnim / World.SPRING_ANIM_TIME; // 0 -> 1 across the bounce
+            float pop = MathUtils.sin(t * MathUtils.PI);          // 0..1..0 hump
+            scaleY = 1f + 0.8f * pop;                             // springs tall, then settles
+            scaleX = 1f - 0.28f * pop;                            // narrows while stretched
+        }
+        float w = 24f * scaleX;
+        float h = 26f * scaleY;
+        painter.image(a.spring, p.centerX() - w / 2f, baseBottom - h, w, h);
+    }
+
+    /** While a boss is on screen, pulse an instruction — you beat it by bouncing into it. */
+    private void drawBossHint(float safeTop) {
+        if (world.getBoss() == null) return;
+        BitmapFont font = a.font(Assets.NASALIZATION, 16);
+        float pulse = 0.55f + 0.45f * MathUtils.sin(animTime * 6f);
+        font.setColor(1f, 0.82f, 0.28f, pulse);
+        painter.textCentered(font, "JUMP INTO THE BOSS!", Config.WORLD_WIDTH / 2f, 74f + safeTop);
+        font.setColor(1f, 1f, 1f, 1f);
     }
 
     private void drawPlayer(SpriteBatch batch, Player p) {

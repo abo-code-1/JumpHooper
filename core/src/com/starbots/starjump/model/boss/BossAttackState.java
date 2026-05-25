@@ -4,12 +4,12 @@ import com.badlogic.gdx.math.MathUtils;
 
 import com.starbots.starjump.model.World;
 
-/** Phase 2: hover and sway, lobbing single aimed shots. Enrages at half HP. */
+/** Phase 2: hover and sway, lobbing single aimed shots. Enrages on its last HP. */
 public final class BossAttackState implements BossState {
 
     private static final float SWAY_SPEED = 1.6f;
-    private static final float SWAY_AMP = 130f;
-    private static final float FIRE_INTERVAL = 1.4f;
+    private static final float SWAY_AMP = 90f;      // narrower sway -> easier to line up a bounce
+    private static final float FIRE_INTERVAL = 1.9f; // gentler fire so it can be approached
 
     @Override
     public void onEnter(Boss b) {
@@ -23,11 +23,13 @@ public final class BossAttackState implements BossState {
 
         b.fireTimer -= dt;
         if (b.fireTimer <= 0) {
-            BossState.fireAtPlayer(b, world, 1, 175f, 0f);
+            BossState.fireAtPlayer(b, world, 1, 150f, 0f);
             b.fireTimer = FIRE_INTERVAL;
         }
 
-        if (b.hp <= Math.ceil(b.maxHp / 2f)) {
+        // Only enrage on the final HP (integer divide: 3 -> 1), so most of the
+        // fight stays in this calmer phase.
+        if (b.hp <= b.maxHp / 2) {
             b.setState(new BossEnrageState());
         }
     }

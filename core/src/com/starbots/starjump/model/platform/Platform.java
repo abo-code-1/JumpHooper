@@ -22,6 +22,9 @@ public final class Platform {
     /** A spring sitting on top of this platform -> super bounce when landed on. */
     public boolean hasSpring;
 
+    /** Counts down (seconds) while a spring is mid-bounce; drives its squash/pop. */
+    public float springAnim;
+
     /** The Strategy in charge of this platform's behaviour. */
     private PlatformBehavior behavior;
 
@@ -35,6 +38,7 @@ public final class Platform {
 
     /** Per-frame update, delegated to the current strategy. */
     public void update() {
+        if (springAnim > 0f) springAnim -= Config.STEP;
         if (behavior != null) behavior.update(this);
     }
 

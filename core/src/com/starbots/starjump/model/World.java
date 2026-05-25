@@ -257,7 +257,7 @@ public final class World {
 
     private static final int FIRST_BOSS_SCORE = 2800;
     private static final int BOSS_RESPAWN_GAP = 4000;
-    private static final int BOSS_HP = 4;
+    private static final int BOSS_HP = 3;
     // Keep the boss reachable: it straddles the player's rest line (scroll
     // threshold) so a rising bounce connects while shots still rain downward.
     private static final float BOSS_HOVER_Y = Config.SCROLL_THRESHOLD - 66f;
@@ -332,9 +332,13 @@ public final class World {
     /** Ported from {@code jump()} but with a much stronger spring impulse. */
     private void springBounce(Platform p) {
         player.speed = Config.SPRING_SPEED;
+        p.springAnim = SPRING_ANIM_TIME;       // kick off the squash/pop animation
         scores.registerJump();
         publish(GameEventType.SPRING_BOUNCE, new Vector2(p.centerX(), p.y));
     }
+
+    /** How long the spring's squash/pop animation plays after a bounce. */
+    public static final float SPRING_ANIM_TIME = 0.34f;
 
     // --- pickups (hearts, jetpacks) -------------------------------------------
 

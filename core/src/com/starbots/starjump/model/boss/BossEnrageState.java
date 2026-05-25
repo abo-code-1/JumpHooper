@@ -4,12 +4,12 @@ import com.badlogic.gdx.math.MathUtils;
 
 import com.starbots.starjump.model.World;
 
-/** Phase 3 (low HP): faster sway, faster three-shot spreads. */
+/** Phase 3 (final HP): faster sway, quicker two-shot spreads. */
 public final class BossEnrageState implements BossState {
 
     private static final float SWAY_SPEED = 2.6f;
-    private static final float SWAY_AMP = 150f;
-    private static final float FIRE_INTERVAL = 0.8f;
+    private static final float SWAY_AMP = 100f;
+    private static final float FIRE_INTERVAL = 1.2f;
 
     @Override
     public void onEnter(Boss b) {
@@ -23,7 +23,7 @@ public final class BossEnrageState implements BossState {
 
         b.fireTimer -= dt;
         if (b.fireTimer <= 0) {
-            BossState.fireAtPlayer(b, world, 3, 190f, 16f);
+            BossState.fireAtPlayer(b, world, 2, 165f, 18f);
             b.fireTimer = FIRE_INTERVAL;
         }
     }
