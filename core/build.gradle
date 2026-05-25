@@ -1,0 +1,27 @@
+apply plugin: 'java-library'
+
+// Flat source layout (matches the classic libGDX project structure).
+sourceSets.main.java.srcDirs = [ 'src/' ]
+// Bundle the shared assets into the core jar so packaged builds find them.
+sourceSets.main.resources.srcDirs = [ '../assets' ]
+
+dependencies {
+    api "com.badlogicgames.gdx:gdx:$gdxVersion"
+    api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+}
+
+// We run on a modern JDK but compile to Java 17 bytecode (shared with android).
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+    options.encoding = 'UTF-8'
+}
+
+eclipse.project.name = 'StarJump-core'
+
+// Headless, GL-free simulation smoke test:  ./gradlew smokeTest
+tasks.register('smokeTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs the World simulation headlessly and asserts the ported mechanics.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.starbots.starjump.SmokeTest'
+}

@@ -1,0 +1,30 @@
+// Root build file shared by every module.
+buildscript {
+    repositories {
+        mavenCentral()
+        google()
+        gradlePluginPortal()
+    }
+    dependencies {
+        // Only consumed by the :android module (when it is included).
+        classpath 'com.android.tools.build:gradle:8.1.4'
+    }
+}
+
+allprojects {
+    apply plugin: 'eclipse'
+
+    version = '1.0.0'
+    ext {
+        appName = 'StarJump'
+        gdxVersion = '1.14.1'
+    }
+
+    repositories {
+        mavenCentral()
+        google()
+        maven { url 'https://s01.oss.sonatype.org' }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+        maven { url 'https://jitpack.io' }
+    }
+}
