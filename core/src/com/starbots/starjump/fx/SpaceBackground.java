@@ -1,5 +1,6 @@
 package com.starbots.starjump.fx;
 
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
@@ -8,10 +9,12 @@ import com.starbots.starjump.Config;
 import com.starbots.starjump.assets.Assets;
 
 /**
- * A living parallax space backdrop drawn over the original nebula image:
- * three depth layers of twinkling stars, an occasional shooting star, and a
- * slowly drifting planet. All layers parallax-scroll with the player's climb,
- * so the world feels like it is genuinely moving through space.
+ * A living parallax space backdrop. The base nebula image is drawn once and
+ * kept static (it is not vertically tileable, so scrolling it produced a hard
+ * seam); all the sense of motion comes from elements that wrap <em>seamlessly</em>
+ * because they are soft radial sprites rather than a tiled image:
+ * drifting nebula clouds, three depth layers of twinkling stars, a slow planet,
+ * and the odd shooting star. Everything parallax-scrolls with the climb.
  */
 public final class SpaceBackground {
 
@@ -19,19 +22,22 @@ public final class SpaceBackground {
         float x, y, size, phase, twinkle, parallax, r, g, b;
     }
 
+    private static final class Cloud {
+        float x, y, size, parallax, drift, r, g, b, alpha;
+    }
+
     private final Texture nebula;
     private final Texture glow;
 
     private final Star[] stars;
+    private final Cloud[] clouds;
     private final float[] planet = new float[2]; // x, y
-    private float planetParallax = 0.18f;
+    private final float planetParallax = 0.18f;
     private float time;
 
     // Shooting star state.
     private float shootTimer;
     private float shootX, shootY, shootVx, shootVy, shootLife;
-
-    private float nebulaOffset;
 
     public SpaceBackground(Assets assets) {
         this.nebula = assets.background;
@@ -54,6 +60,28 @@ public final class SpaceBackground {
             if (tint > 0.8f) { s.r = 0.8f; s.g = 0.9f; } // a few bluish
             stars[i] = s;
         }
+
+        // Soft, faint nebula clouds — these wrap with no seam.
+        float[][] cloudColors = {
+                {0.45f, 0.18f, 0.65f}, // purple
+                {0.18f, 0.38f, 0.75f}, // blue
+                {0.70f, 0.20f, 0.50f}, // magenta
+                {0.15f, 0.55f, 0.55f}, // teal
+        };
+        clouds = new Cloud[5];
+        for (int i = 0; i < clouds.length; i++) {
+            Cloud c = new Cloud();
+            c.x = MathUtils.random(0f, Config.WORLD_WIDTH);
+            c.y = MathUtils.random(0f, Config.WORLD_HEIGHT);
+            c.size = MathUtils.random(260f, 440f);
+            c.parallax = MathUtils.random(0.08f, 0.16f);
+            c.drift = MathUtils.random(3f, 7f);
+            float[] col = cloudColors[i % cloudColors.length];
+            c.r = col[0]; c.g = col[1]; c.b = col[2];
+            c.alpha = MathUtils.random(0.10f, 0.18f);
+            clouds[i] = c;
+        }
+
         planet[0] = Config.WORLD_WIDTH * 0.72f;
         planet[1] = Config.WORLD_HEIGHT * 0.28f;
         shootTimer = MathUtils.random(2f, 5f);
@@ -66,14 +94,20 @@ public final class SpaceBackground {
      */
     public void update(float dt, float scrollDy) {
         time += dt;
-        nebulaOffset -= scrollDy * 0.08f;
-        if (nebulaOffset <= -Config.WORLD_HEIGHT) nebulaOffset += Config.WORLD_HEIGHT;
 
         for (Star s : stars) {
             s.y -= scrollDy * s.parallax;
             if (s.y < 0) {
                 s.y += Config.WORLD_HEIGHT;
                 s.x = MathUtils.random(0f, Config.WORLD_WIDTH);
+            }
+        }
+
+        for (Cloud c : clouds) {
+            c.y -= scrollDy * c.parallax + dt * c.drift;
+            if (c.y < -c.size) {                       // fully off the bottom
+                c.y = Config.WORLD_HEIGHT + c.size;    // respawn fully off the top
+                c.x = MathUtils.random(0f, Config.WORLD_WIDTH);
             }
         }
 
@@ -105,13 +139,18 @@ public final class SpaceBackground {
 
     /** Draw the backdrop. Must be called inside an active {@link SpriteBatch}. */
     public void render(SpriteBatch batch) {
-        // Base nebula, gently drifting (two stacked copies for seamless wrap).
+        // Static base nebula — no tiling, so no seam.
         batch.setColor(1f, 1f, 1f, 1f);
-        batch.draw(nebula, 0, nebulaOffset, Config.WORLD_WIDTH, Config.WORLD_HEIGHT);
-        batch.draw(nebula, 0, nebulaOffset + Config.WORLD_HEIGHT, Config.WORLD_WIDTH, Config.WORLD_HEIGHT);
+        batch.draw(nebula, 0, 0, Config.WORLD_WIDTH, Config.WORLD_HEIGHT);
 
         // Glowing elements use additive blending.
-        batch.setBlendFunction(com.badlogic.gdx.graphics.GL20.GL_SRC_ALPHA, com.badlogic.gdx.graphics.GL20.GL_ONE);
+        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+
+        // Drifting nebula clouds.
+        for (Cloud c : clouds) {
+            batch.setColor(c.r, c.g, c.b, c.alpha);
+            batch.draw(glow, c.x - c.size / 2f, c.y - c.size / 2f, c.size, c.size);
+        }
 
         // Drifting planet (soft, low alpha so it never hides gameplay).
         batch.setColor(0.35f, 0.85f, 0.95f, 0.30f);
@@ -141,7 +180,7 @@ public final class SpaceBackground {
         }
 
         // Restore default blending + color for subsequent draws.
-        batch.setBlendFunction(com.badlogic.gdx.graphics.GL20.GL_SRC_ALPHA, com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA);
+        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         batch.setColor(1f, 1f, 1f, 1f);
     }
 }
