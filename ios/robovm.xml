@@ -3,7 +3,7 @@
   <executableName>${app.executable}</executableName>
   <mainClass>${app.mainclass}</mainClass>
   <os>ios</os>
-  <arch>thumbv7</arch>
+  <arch>arm64</arch>
   <target>ios</target>
   <iosInfoPList>Info.plist.xml</iosInfoPList>
   <resources>
@@ -28,7 +28,6 @@
     <pattern>com.android.org.bouncycastle.jcajce.provider.keystore.bc.BcKeyStoreSpi$Std</pattern>
     <pattern>com.android.org.bouncycastle.jce.provider.PKIXCertPathValidatorSpi</pattern>
     <pattern>javax.security.auth.x500.X500Principal</pattern>
-    <pattern>org.robovm.cocoatouch.foundation.NSObject</pattern>
   </forceLinkClasses>
   <libs>
     <lib>z</lib>
