@@ -78,5 +78,5 @@ public final class Config {
     public static final float INVULN_TIME = 1.3f;
 
     public static final int START_LIVES = 3;
-    public static final int MAX_LIVES = 5;
+    public static final int MAX_LIVES = 3;   // hearts top you back up to 3, never beyond
 }
