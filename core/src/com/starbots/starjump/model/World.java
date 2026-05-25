@@ -80,7 +80,7 @@ public final class World {
         float max = Config.WORLD_WIDTH - Config.PLATFORM_W; // randomW(60)
         for (int i = 0; i < platforms.length; i++) {
             float x = MathUtils.random(0f, max);
-            float y = Config.PLATFORM_SPACING * (i + 1); // 60, 120, ... 540
+            float y = 40f + i * Config.PLATFORM_SPACING; // evenly spaced down the screen
             platforms[i] = plainFactory.spawn(x, y, spawnCtx.set(0, false));
         }
     }
@@ -283,8 +283,10 @@ public final class World {
             Platform p = platforms[i];
             p.y += speed * Config.SCROLL_FACTOR; // speed<0 * -1.2 => moves down
             if (p.y > Config.WORLD_HEIGHT) {
+                // Recycle one uniform gap above the current highest platform, so
+                // spacing stays even and the next platform is always reachable.
                 float newX = MathUtils.random(0f, max);
-                float newY = -Config.PLATFORM_H; // -h, just above the top
+                float newY = highestPlatformY() - Config.PLATFORM_SPACING;
                 boolean lavaAllowed = !anyLava();
                 platforms[i] = effectFactory.spawn(newX, newY,
                         spawnCtx.set(scores.getScore(), lavaAllowed));
@@ -313,6 +315,15 @@ public final class World {
             if (p != null && p.kind == PlatformKind.LAVA) return true;
         }
         return false;
+    }
+
+    /** The smallest y (highest on screen) among the live platforms. */
+    private float highestPlatformY() {
+        float min = Float.MAX_VALUE;
+        for (Platform p : platforms) {
+            if (p != null && p.y < min) min = p.y;
+        }
+        return min;
     }
 
     public Player getPlayer()                { return player; }

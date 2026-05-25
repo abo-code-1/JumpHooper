@@ -34,7 +34,13 @@ public final class Config {
     // --- Platforms ------------------------------------------------------------
     public static final float PLATFORM_W = 60f;
     public static final float PLATFORM_H = 14.8f;
-    public static final float PLATFORM_SPACING = 60f;      // initial vertical gap
+    /**
+     * Uniform vertical gap between platforms, used both for the opening layout
+     * and when recycling. Kept comfortably below the jump apex so the next
+     * platform is always reachable. (The original recycled to a fixed point,
+     * which let an oversized ~300px gap circulate through the stack.)
+     */
+    public static final float PLATFORM_SPACING = 88f;
     public static final float MOVING_SPEED = 1.5f;         // |velocityX| of moving platforms
 
     // --- Physics (ported verbatim) -------------------------------------------
