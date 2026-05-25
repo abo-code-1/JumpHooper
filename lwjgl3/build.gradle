@@ -1,0 +1,43 @@
+apply plugin: 'application'
+
+sourceSets.main.java.srcDirs = [ 'src/' ]
+sourceSets.main.resources.srcDirs = [ '../assets' ]
+
+mainClassName = 'com.starbots.starjump.lwjgl3.Lwjgl3Launcher'
+eclipse.project.name = 'StarJump-lwjgl3'
+application.setMainClass(mainClassName)
+
+dependencies {
+    implementation project(':core')
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+    implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+    implementation "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+    options.encoding = 'UTF-8'
+}
+
+// Run the game straight from the assets folder so internal files resolve.
+run {
+    workingDir = rootProject.file('assets')
+    setIgnoreExitValue(true)
+    // macOS requires the JVM main thread for GLFW; StartupHelper re-launches
+    // with -XstartOnFirstThread automatically, but we also pass it here.
+    if (org.gradle.internal.os.OperatingSystem.current() == org.gradle.internal.os.OperatingSystem.MAC_OS) {
+        jvmArgs += '-XstartOnFirstThread'
+    }
+}
+
+// Build a runnable fat jar:  ./gradlew lwjgl3:jar  ->  lwjgl3/build/libs/StarJump-<ver>.jar
+jar {
+    archiveBaseName.set(appName)
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+    dependsOn configurations.runtimeClasspath
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    manifest { attributes 'Main-Class': mainClassName }
+    doLast {
+        file(archiveFile).setExecutable(true, false)
+    }
+}

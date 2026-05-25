@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>${app.name}</string>
+	<key>CFBundleExecutable</key>
+	<string>${app.executable}</string>
+	<key>CFBundleIdentifier</key>
+	<string>${app.id}</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>${app.name}</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>${app.version}</string>
+	<key>CFBundleVersion</key>
+	<string>${app.build}</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<!--
+	  An (empty) UILaunchScreen dict is the modern, ibtool-free way to tell iOS
+	  to render at the device's native resolution. Without it the app runs in a
+	  scaled-down legacy size and does not fill the screen. A compiled
+	  LaunchScreen.storyboard would also work, but this Xcode's ibtool can't
+	  compile one ("iOS Platform Not Installed" — no iOS runtime installed).
+	-->
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+		<string>accelerometer</string>
+	</array>
+	<key>UIStatusBarHidden</key>
+	<true/>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+</dict>
+</plist>

@@ -1,0 +1,32 @@
+apply plugin: 'java'
+apply plugin: 'robovm'
+
+sourceSets.main.java.srcDirs = [ 'src/' ]
+eclipse.project.name = appName + '-ios'
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+    options.encoding = 'UTF-8'
+}
+
+dependencies {
+    implementation project(':core')
+    implementation "com.mobidevelop.robovm:robovm-rt:$robovmVersion"
+    implementation "com.mobidevelop.robovm:robovm-cocoatouch:$robovmVersion"
+    implementation "com.badlogicgames.gdx:gdx-backend-robovm:$gdxVersion"
+    implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-ios"
+    // FreeType native lib (the game generates its fonts with gdx-freetype).
+    implementation "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-ios"
+}
+
+// Build first so the RoboVM compiler has the compiled classes.
+tasks.named('launchIPhoneSimulator') { dependsOn 'build' }
+tasks.named('launchIPadSimulator')   { dependsOn 'build' }
+tasks.named('launchIOSDevice')       { dependsOn 'build' }
+tasks.named('createIPA')             { dependsOn 'build' }
+
+robovm {
+    // Modern iPhones are 64-bit only; arm64 is all we need (and all the
+    // current iOS SDK supports).
+    archs = 'arm64'
+}

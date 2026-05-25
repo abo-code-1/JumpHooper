@@ -1,3 +1,39 @@
-rootProject.name = "DuddleJump"
+// StarJump (libGDX port) — module wiring.
+//
+// :core   -> shared game logic (the 6 design patterns live here)
+// :lwjgl3 -> desktop launcher (keyboard controls)
+// :android-> android launcher (accelerometer / tilt controls)
+//
+// The :android module is only included when an Android SDK is actually
+// configured. This keeps `./gradlew lwjgl3:run` working out-of-the-box on a
+// machine without the Android SDK (the Android Gradle Plugin fails at
+// configuration time when no SDK is present).
+include 'core', 'lwjgl3'
 
-include("core", "desktop")
+boolean hasAndroidSdk = System.getenv('ANDROID_HOME') != null || System.getenv('ANDROID_SDK_ROOT') != null
+File localProps = new File(rootDir, 'local.properties')
+if (localProps.exists()) {
+    Properties props = new Properties()
+    localProps.withInputStream { props.load(it) }
+    if (props.getProperty('sdk.dir') != null) hasAndroidSdk = true
+}
+
+if (hasAndroidSdk) {
+    include 'android'
+    println '[StarJump] Android SDK detected -> :android module enabled (tilt controls).'
+} else {
+    println '[StarJump] No Android SDK -> :android module skipped (desktop build only). ' +
+            'Set sdk.dir in local.properties or export ANDROID_HOME to enable it.'
+}
+
+// The :ios module (RoboVM/MobiVM) is only included on macOS with Xcode.app
+// present, so it never disturbs desktop/Android builds elsewhere. Building it
+// also needs a JDK 8-17 (the RoboVM compiler does not support JDK 23+).
+boolean isMac = System.getProperty('os.name').toLowerCase().contains('mac')
+boolean hasXcode = new File('/Applications/Xcode.app').exists()
+if (isMac && hasXcode) {
+    include 'ios'
+    println '[StarJump] macOS + Xcode detected -> :ios module enabled (tilt controls).'
+} else {
+    println '[StarJump] No macOS/Xcode -> :ios module skipped.'
+}

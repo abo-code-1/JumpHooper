@@ -1,11 +1,24 @@
+# Gradle
 .gradle/
-**/build/
-out/
+build/
+*/build/
+
+# IDE
 .idea/
 *.iml
-.DS_Store
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+bin/
+out/
 
-# local secrets — never commit
-.env
-.env.*
-!.env.example
+# Android
+local.properties
+android/libs/
+*.apk
+*.keystore
+
+# OS
+.DS_Store
