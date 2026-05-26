@@ -63,22 +63,26 @@ public final class MenuState implements GameState {
     @Override
     public void render(SpriteBatch batch) {
         float cx = Config.WORLD_WIDTH / 2f;
+        float h = Config.WORLD_HEIGHT;
         int record = ScoreManager.INSTANCE.getRecord();
-        float safeTop = painter.safeTopInset(); // keep the logo/record clear of the camera
 
         painter.begin();
         painter.fullscreen(a.startBackground);
 
-        // Logo wordmark near the top, keeping its aspect ratio (pushed below the notch).
-        float logoW = 240f;
+        // Title + record as a centred hero block. Positions are proportional to
+        // the screen height, so the logo sits in the upper-middle (well clear of
+        // the camera) and the record lands around the centre on any device.
+        float logoW = 280f;
         float logoH = logoW * a.logo.getHeight() / a.logo.getWidth();
-        painter.image(a.logo, cx - logoW / 2f, 36f + safeTop, logoW, logoH);
+        float logoTop = h * 0.20f;
+        painter.image(a.logo, cx - logoW / 2f, logoTop, logoW, logoH);
 
-        painter.textCentered(a.font(Assets.NASALIZATION, 20), "record", cx, 226f + safeTop);
-        painter.textCentered(a.font(Assets.NASALIZATION, 48), String.valueOf(record), cx, 252f + safeTop);
+        float recordTop = logoTop + logoH + 36f;
+        painter.textCentered(a.font(Assets.NASALIZATION, 20), "record", cx, recordTop);
+        painter.textCentered(a.font(Assets.NASALIZATION, 48), String.valueOf(record), cx, recordTop + 32f);
 
-        // Decorative astronaut (original: [width/2 - 22, height/2 + 70]).
-        painter.image(a.astronaut, cx - 22f, Config.WORLD_HEIGHT / 2f + 70f,
+        // Decorative astronaut in the lower-middle, above the buttons.
+        painter.image(a.astronaut, cx - Config.PLAYER_W / 2f, h * 0.62f,
                 Config.PLAYER_W, Config.PLAYER_H);
         painter.end();
 
