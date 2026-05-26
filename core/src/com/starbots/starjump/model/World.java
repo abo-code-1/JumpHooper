@@ -87,6 +87,7 @@ public final class World {
         invulnTimer = 0f;
         jetpackTimer = 0f;
         gameOver = false;
+        publish(GameEventType.RUN_STARTED, null);
         float max = Config.WORLD_WIDTH - Config.PLATFORM_W; // randomW(60)
         for (int i = 0; i < platforms.length; i++) {
             float x = MathUtils.random(0f, max);

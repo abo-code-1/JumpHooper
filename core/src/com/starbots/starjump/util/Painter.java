@@ -74,6 +74,11 @@ public final class Painter {
         font.draw(batch, s, centerX - layout.width / 2f, Config.WORLD_HEIGHT - top);
     }
 
+    public void textRight(BitmapFont font, String s, float right, float top) {
+        layout.setText(font, s);
+        font.draw(batch, s, right - layout.width, Config.WORLD_HEIGHT - top);
+    }
+
     /** Word-wrapped, left-aligned text inside a column of {@code width}px. */
     public float textWrapped(BitmapFont font, String s, float left, float top, float width) {
         layout.setText(font, s, font.getColor(), width, Align.left, true);

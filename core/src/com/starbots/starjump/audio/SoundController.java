@@ -2,6 +2,7 @@ package com.starbots.starjump.audio;
 
 import com.badlogic.gdx.audio.Sound;
 
+import com.starbots.starjump.GameSettings;
 import com.starbots.starjump.assets.Assets;
 import com.starbots.starjump.patterns.observer.GameEvent;
 import com.starbots.starjump.patterns.observer.GameEventListener;
@@ -14,7 +15,7 @@ import com.starbots.starjump.patterns.observer.GameEventListener;
 public final class SoundController implements GameEventListener {
 
     private final Assets assets;
-    private float volume = 0.6f;
+    private final GameSettings settings = GameSettings.INSTANCE;
 
     public SoundController(Assets assets) {
         this.assets = assets;
@@ -40,6 +41,6 @@ public final class SoundController implements GameEventListener {
     }
 
     private void play(Sound sound, float scale) {
-        if (sound != null) sound.play(volume * scale);
+        if (sound != null) sound.play(settings.getSfxVolume() * scale);
     }
 }

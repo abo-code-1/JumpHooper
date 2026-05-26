@@ -124,7 +124,7 @@ Requires a JDK (17+). Everything else (Gradle, libGDX) is fetched by the wrapper
 ```
 
 **Controls:** `←/→` or `A/D` move • `SPACE`/`ENTER` start • `C` achievements •
-`ESC` back • drag / `↑↓` scroll the curiosities list.
+`S` settings • `ESC` back • drag / `↑↓` scroll the curiosities list.
 
 Build a runnable fat jar:
 

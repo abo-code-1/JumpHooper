@@ -2,6 +2,8 @@ package com.starbots.starjump.patterns.observer;
 
 /** Kinds of in-game events broadcast through the {@link EventBus}. */
 public enum GameEventType {
+    /** A new playable run started. Payload: none. */
+    RUN_STARTED,
     /** Player bounced off a platform. Payload: the new jump count (Integer). */
     PLAYER_JUMPED,
     /** Run score changed. Payload: current run score (Integer). */

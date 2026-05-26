@@ -3,6 +3,7 @@ package com.starbots.starjump.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -29,6 +30,8 @@ import com.starbots.starjump.patterns.observer.EventBus;
 import com.starbots.starjump.patterns.observer.GameEvent;
 import com.starbots.starjump.patterns.observer.GameEventListener;
 import com.starbots.starjump.patterns.state.GameState;
+import com.starbots.starjump.util.Button;
+import com.starbots.starjump.util.Colors;
 import com.starbots.starjump.util.Painter;
 
 /**
@@ -57,6 +60,19 @@ public final class PlayState implements GameState, GameEventListener {
     private boolean deathHandled;
     private float deathTimer;
 
+    // Pause overlay state.
+    private boolean paused;
+    private boolean goingToSettings;   // suppress the music-stop while popping to Settings
+    private boolean runStarted;        // so returning from Settings resumes, not restarts
+    private final Button resumeButton;
+    private final Button settingsButton;
+    private final Button menuButton;
+
+    private static final float PAUSE_BTN_W = 42f;
+    private static final float PAUSE_BTN_H = 32f;
+    private static final Color PAUSE_DIM = new Color(0f, 0f, 0f, 0.62f);
+    private static final Color PAUSE_BTN_BG = new Color(0f, 0f, 0f, 0.45f);
+
     public PlayState(StarJumpGame game) {
         this.game = game;
         this.painter = game.painter();
@@ -66,29 +82,53 @@ public final class PlayState implements GameState, GameEventListener {
         this.background = new SpaceBackground(a);
         this.particles = new ParticleSystem(a);
         this.breakingFx = new BreakingPlatformFx(a);
+
+        float bw = 240f, bh = 54f;
+        float bx = (Config.WORLD_WIDTH - bw) / 2f;
+        float midY = Config.WORLD_HEIGHT / 2f;
+        BitmapFont btnFont = a.font(Assets.THALEAH, 24);
+        resumeButton = new Button(bx, midY - 80f, bw, bh, "Continuar", btnFont,
+                Colors.YELLOW_TOP, Colors.YELLOW_BOT);
+        settingsButton = new Button(bx, midY - 12f, bw, bh, "Ajustes", btnFont,
+                Colors.GRAY_TOP, Colors.GRAY_BOT);
+        menuButton = new Button(bx, midY + 56f, bw, bh, "Menu", btnFont,
+                Colors.GRAY_TOP, Colors.GRAY_BOT);
     }
 
     @Override
     public void enter() {
-        world.startRun();
-        accumulator = 0f;
-        animTime = 0f;
-        deathHandled = false;
-        deathTimer = 0f;
-        particles.clear();
-        breakingFx.clear();
+        // Guard so returning from the pause -> Settings excursion resumes the
+        // same run instead of restarting it.
+        if (!runStarted) {
+            world.startRun();
+            accumulator = 0f;
+            animTime = 0f;
+            deathHandled = false;
+            deathTimer = 0f;
+            particles.clear();
+            breakingFx.clear();
+            runStarted = true;
+        }
+        goingToSettings = false;
         bus.subscribe(this);
     }
 
     @Override
     public void exit() {
         bus.unsubscribe(this);
+        // Keep music going while we pop to Settings; stop it only on a real exit.
+        if (!goingToSettings) game.music().stop();
     }
 
     @Override
     public void update(float delta) {
-        if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
-            game.gsm().set(new MenuState(game));
+        if (paused) {
+            updatePauseMenu();
+            return;
+        }
+        if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)
+                || (!deathHandled && pauseButtonClicked())) {
+            paused = true;
             return;
         }
 
@@ -224,16 +264,22 @@ public final class PlayState implements GameState, GameEventListener {
 
         particles.render(batch, Config.WORLD_HEIGHT);
 
-        painter.textCentered(a.font(Assets.NASALIZATION, 32),
+        painter.textRight(a.font(Assets.NASALIZATION, 32),
                 String.valueOf(ScoreManager.INSTANCE.getScore()),
-                Config.WORLD_WIDTH / 2f, 30f + safeTop);
+                Config.WORLD_WIDTH - 14f, 30f + safeTop);
         drawHud(batch, safeTop);
         drawBossHint(safeTop);
         painter.end();
 
-        // Reset camera to centre.
+        // Reset camera to centre so the HUD/overlay draw unshaken.
         cam.position.set(Config.WORLD_WIDTH / 2f, Config.WORLD_HEIGHT / 2f, 0);
         cam.update();
+
+        if (paused) {
+            drawPauseOverlay();
+        } else if (!deathHandled) {
+            drawPauseButton(safeTop);
+        }
     }
 
     private void drawPickups(SpriteBatch batch) {
@@ -400,6 +446,64 @@ public final class PlayState implements GameState, GameEventListener {
         batch.draw(a.glow, fx - w * 0.3f, feetUp - h * 0.6f, w * 0.6f, h * 0.7f);
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         batch.setColor(1f, 1f, 1f, 1f);
+    }
+
+    // --- pause -----------------------------------------------------------------
+
+    private float pauseBtnX() {
+        return Config.WORLD_WIDTH / 2f - PAUSE_BTN_W / 2f;
+    }
+
+    private boolean pauseButtonClicked() {
+        return painter.clicked(pauseBtnX(), 12f + painter.safeTopInset(),
+                PAUSE_BTN_W, PAUSE_BTN_H);
+    }
+
+    private void updatePauseMenu() {
+        if (Gdx.input.isKeyJustPressed(Keys.ESCAPE) || resumeButton.clicked(painter)) {
+            paused = false;
+            return;
+        }
+        if (settingsButton.clicked(painter)) {
+            goingToSettings = true;                          // exit() keeps the music playing
+            game.gsm().set(new SettingsState(game, this));   // returns here when done
+            return;
+        }
+        if (menuButton.clicked(painter)) {
+            game.gsm().set(new MenuState(game));
+        }
+    }
+
+    /** Small pause button, top-centre, that freezes the run. */
+    private void drawPauseButton(float safeTop) {
+        float x = pauseBtnX(), top = 12f + safeTop;
+        painter.beginShapes();
+        painter.rect(x, top, PAUSE_BTN_W, PAUSE_BTN_H, PAUSE_BTN_BG);
+        painter.border(x, top, PAUSE_BTN_W, PAUSE_BTN_H, 2f, Colors.WHITE);
+        float barW = 6f, gap = 8f, barH = PAUSE_BTN_H - 14f, barTop = top + 7f;
+        float cx = x + PAUSE_BTN_W / 2f;
+        painter.rect(cx - gap / 2f - barW, barTop, barW, barH, Colors.WHITE);
+        painter.rect(cx + gap / 2f, barTop, barW, barH, Colors.WHITE);
+        painter.endShapes();
+    }
+
+    private void drawPauseOverlay() {
+        painter.beginShapes();
+        painter.rect(0f, 0f, Config.WORLD_WIDTH, Config.WORLD_HEIGHT, PAUSE_DIM);
+        resumeButton.fill(painter);
+        settingsButton.fill(painter);
+        menuButton.fill(painter);
+        painter.endShapes();
+
+        painter.begin();
+        BitmapFont title = a.font(Assets.NASALIZATION, 34);
+        title.setColor(Colors.WHITE);
+        painter.textCentered(title, "Pausa",
+                Config.WORLD_WIDTH / 2f, Config.WORLD_HEIGHT / 2f - 150f);
+        resumeButton.drawLabel(painter);
+        settingsButton.drawLabel(painter);
+        menuButton.drawLabel(painter);
+        painter.end();
     }
 
     @Override public void resize(int width, int height) {}

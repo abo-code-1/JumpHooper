@@ -11,6 +11,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 import com.starbots.starjump.achievements.AchievementManager;
 import com.starbots.starjump.assets.Assets;
+import com.starbots.starjump.audio.MusicController;
 import com.starbots.starjump.audio.SoundController;
 import com.starbots.starjump.input.TiltControl;
 import com.starbots.starjump.patterns.observer.EventBus;
@@ -49,6 +50,7 @@ public final class StarJumpGame extends ApplicationAdapter {
 
     // Observers kept referenced so they aren't collected.
     private SoundController soundController;
+    private MusicController musicController;
     private AchievementManager achievementManager;
 
     /** @param tilt platform-specific input adapter (Adapter pattern). */
@@ -68,6 +70,8 @@ public final class StarJumpGame extends ApplicationAdapter {
         batch = new SpriteBatch();
         shapes = new ShapeRenderer();
 
+        GameSettings.INSTANCE.init();
+
         assets = new Assets();
         assets.load();
 
@@ -77,8 +81,10 @@ public final class StarJumpGame extends ApplicationAdapter {
         ScoreManager.INSTANCE.init(bus);
 
         soundController = new SoundController(assets);
+        musicController = new MusicController(assets);
         achievementManager = new AchievementManager(bus);
         bus.subscribe(soundController);
+        bus.subscribe(musicController);
         bus.subscribe(achievementManager);
 
         gsm = new GameStateManager();
@@ -91,6 +97,7 @@ public final class StarJumpGame extends ApplicationAdapter {
         ScreenUtils.clear(0f, 0f, 0f, 1f);
         viewport.apply();
         gsm.update(delta);
+        if (musicController != null) musicController.update();
         gsm.render(batch);
     }
 
@@ -104,6 +111,7 @@ public final class StarJumpGame extends ApplicationAdapter {
     public void dispose() {
         if (batch != null) batch.dispose();
         if (shapes != null) shapes.dispose();
+        if (musicController != null) musicController.stop();
         if (assets != null) assets.dispose();
     }
 
@@ -115,4 +123,5 @@ public final class StarJumpGame extends ApplicationAdapter {
     public EventBus bus()             { return bus; }
     public GameStateManager gsm()     { return gsm; }
     public Viewport viewport()        { return viewport; }
+    public MusicController music()     { return musicController; }
 }

@@ -1,8 +1,8 @@
 # Getting Star Jump onto the iPhone — resume notes
 
 > For a future Claude session (and me): where we are and exactly what to do next.
-> The game is fully built and committed on the `enhancements` branch. The only
-> thing left is the physical install onto the iPhone.
+> The game code lives on the `main` branch. After gameplay/UI changes, rebuild
+> the IPA first; the remaining blocker is the physical install onto the iPhone.
 
 ## TL;DR
 1. Build the IPA (needs **JDK 17**, not the default JDK 23):
@@ -49,4 +49,4 @@ Once it holds steady for ~30s, the Sideloadly step is one click.
 - JDK 17: `/usr/libexec/java_home -v 17` (Homebrew temurin/openjdk@17). RoboVM does NOT support JDK 23.
 - `ios/robovm.xml` uses `<arch>arm64</arch>`; `ios/build.gradle` includes `gdx-freetype-platform:natives-ios`; RoboVM plugin `2.3.24`.
 - The **desktop** build always works: `./gradlew lwjgl3:run`. Logic test: `./gradlew smokeTest`.
-- Branches: `enhancements` = this game (live). `main` = the user's older JumpHooper project (restored on their request — leave it alone). Remote: `github.com/abo-code-1/JumpHooper`.
+- Branches: `main` = Star Jump live codebase. `jumphooper-archive` preserves the older JumpHooper project. Remote: `github.com/abo-code-1/JumpHooper`.

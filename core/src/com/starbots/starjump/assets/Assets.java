@@ -1,6 +1,7 @@
 package com.starbots.starjump.assets;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
@@ -11,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFont
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ObjectMap;
 
+import com.starbots.starjump.audio.MusicSynth;
 import com.starbots.starjump.audio.SfxSynth;
 import com.starbots.starjump.model.platform.PlatformKind;
 
@@ -53,6 +55,7 @@ public final class Assets implements Disposable {
     // Synthesized SFX (may be null if synthesis failed; always used null-safely)
     public Sound sfxJump, sfxLand, sfxHit, sfxExplosion, sfxPowerup, sfxBoss, sfxGameOver;
     public Sound sfxSpring, sfxJetpack;
+    public Music musicRegular, musicBoss;
 
     // Font generators + cache
     private final ObjectMap<String, FreeTypeFontGenerator> generators = new ObjectMap<>();
@@ -98,6 +101,8 @@ public final class Assets implements Disposable {
         sfxGameOver  = SfxSynth.gameOver();
         sfxSpring    = SfxSynth.spring();
         sfxJetpack   = SfxSynth.jetpack();
+        musicRegular = MusicSynth.regular();
+        musicBoss    = MusicSynth.boss();
 
         registerGenerator(NASALIZATION, "fonts/nasalization.ttf");
         registerGenerator(THALEAH, "fonts/ThaleahFat.ttf");
@@ -163,11 +168,16 @@ public final class Assets implements Disposable {
         disposeSound(sfxJump); disposeSound(sfxLand); disposeSound(sfxHit);
         disposeSound(sfxExplosion); disposeSound(sfxPowerup); disposeSound(sfxBoss);
         disposeSound(sfxGameOver); disposeSound(sfxSpring); disposeSound(sfxJetpack);
+        disposeMusic(musicRegular); disposeMusic(musicBoss);
         for (BitmapFont f : fontCache.values()) f.dispose();
         for (FreeTypeFontGenerator g : generators.values()) g.dispose();
     }
 
     private static void disposeSound(Sound s) {
         if (s != null) s.dispose();
+    }
+
+    private static void disposeMusic(Music m) {
+        if (m != null) m.dispose();
     }
 }

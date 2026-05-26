@@ -23,6 +23,7 @@ public final class MenuState implements GameState {
 
     private final Button startButton;
     private final Button achievementsButton;
+    private final Button settingsButton;
 
     public MenuState(StarJumpGame game) {
         this.game = game;
@@ -31,13 +32,15 @@ public final class MenuState implements GameState {
 
         float bw = Config.WORLD_WIDTH * 0.6f;
         float bx = (Config.WORLD_WIDTH - bw) / 2f;
-        float bh = 56f;
+        float bh = 48f;
         BitmapFont btnFont = a.font(Assets.THALEAH, 26);
 
-        startButton = new Button(bx, Config.WORLD_HEIGHT - 150 - bh, bw, bh,
+        startButton = new Button(bx, Config.WORLD_HEIGHT - 196f, bw, bh,
                 "Iniciar", btnFont, Colors.YELLOW_TOP, Colors.YELLOW_BOT);
-        achievementsButton = new Button(bx, Config.WORLD_HEIGHT - 78 - bh, bw, bh,
+        achievementsButton = new Button(bx, Config.WORLD_HEIGHT - 138f, bw, bh,
                 "Conquistas", btnFont, Colors.GRAY_TOP, Colors.GRAY_BOT);
+        settingsButton = new Button(bx, Config.WORLD_HEIGHT - 80f, bw, bh,
+                "Ajustes", btnFont, Colors.GRAY_TOP, Colors.GRAY_BOT);
     }
 
     @Override public void enter() {}
@@ -51,6 +54,9 @@ public final class MenuState implements GameState {
         } else if (achievementsButton.clicked(painter)
                 || Gdx.input.isKeyJustPressed(Keys.C)) {
             game.gsm().set(new AchievementsState(game));
+        } else if (settingsButton.clicked(painter)
+                || Gdx.input.isKeyJustPressed(Keys.S)) {
+            game.gsm().set(new SettingsState(game));
         }
     }
 
@@ -78,11 +84,13 @@ public final class MenuState implements GameState {
         painter.beginShapes();
         startButton.fill(painter);
         achievementsButton.fill(painter);
+        settingsButton.fill(painter);
         painter.endShapes();
 
         painter.begin();
         startButton.drawLabel(painter);
         achievementsButton.drawLabel(painter);
+        settingsButton.drawLabel(painter);
         painter.end();
     }
 

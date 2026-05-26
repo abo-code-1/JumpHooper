@@ -21,6 +21,11 @@ public final class IOSLauncher extends IOSApplication.Delegate {
         IOSApplicationConfiguration config = new IOSApplicationConfiguration();
         config.orientationPortrait = true;
         config.orientationLandscape = false;
+        // Tilt steering reads the accelerometer (and roll/pitch via the compass).
+        // libGDX's iOS backend only starts these sensors when asked, so without
+        // this every accelerometer/roll read returns 0 — i.e. tilt does nothing.
+        config.useAccelerometer = true;
+        config.useCompass = true;
         return new IOSApplication(new StarJumpGame(new AccelerometerTiltAdapter()), config);
     }
 

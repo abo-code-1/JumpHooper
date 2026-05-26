@@ -31,6 +31,9 @@
 	-->
 	<key>UILaunchScreen</key>
 	<dict/>
+	<!-- Required for CoreMotion: tilt steering reads the accelerometer. -->
+	<key>NSMotionUsageDescription</key>
+	<string>Star Jump uses motion to let you steer by tilting the phone.</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>
