@@ -166,8 +166,8 @@ public final class GameSettings {
     public String getControlModeLabel() {
         switch (controlMode) {
             case CONTROL_TILT: return "Tilt";
-            case CONTROL_HYBRID: return "Hibrido";
-            default: return "Toque";
+            case CONTROL_HYBRID: return "Hybrid";
+            default: return "Touch";
         }
     }
 

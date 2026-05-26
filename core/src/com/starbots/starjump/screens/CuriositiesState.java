@@ -14,6 +14,7 @@ import com.starbots.starjump.StarJumpGame;
 import com.starbots.starjump.achievements.Curiosities;
 import com.starbots.starjump.assets.Assets;
 import com.starbots.starjump.patterns.state.GameState;
+import com.starbots.starjump.util.Button;
 import com.starbots.starjump.util.Colors;
 import com.starbots.starjump.util.Painter;
 
@@ -46,6 +47,7 @@ public final class CuriositiesState implements GameState {
     private boolean dragging;
     private float lastDragY;
     private final Vector2 tmp = new Vector2();
+    private final Button backButton;
 
     public CuriositiesState(StarJumpGame game, Type type) {
         this.game = game;
@@ -55,6 +57,11 @@ public final class CuriositiesState implements GameState {
         this.cardW = Config.WORLD_WIDTH * 0.9f;
         this.cardX = (Config.WORLD_WIDTH - cardW) / 2f;
         this.textW = cardW - 2 * PAD;
+
+        float backW = 200f, backH = 48f;
+        this.backButton = new Button((Config.WORLD_WIDTH - backW) / 2f,
+                Config.WORLD_HEIGHT - 92f, backW, backH, "Back",
+                a.font(Assets.THALEAH, 22), Colors.GRAY_TOP, Colors.GRAY_BOT);
     }
 
     @Override
@@ -65,7 +72,7 @@ public final class CuriositiesState implements GameState {
         int total = type == Type.DISTANCE
                 ? ScoreManager.INSTANCE.getTotalDistance()
                 : ScoreManager.INSTANCE.getTotalJumps();
-        String typeWord = type == Type.DISTANCE ? "distância" : "pulos";
+        String typeWord = type == Type.DISTANCE ? "distance" : "jumps";
 
         int n = milestones.length;
         unlocked = new boolean[n];
@@ -82,9 +89,9 @@ public final class CuriositiesState implements GameState {
         for (int i = 0; i < n; i++) {
             unlocked[i] = total >= milestones[i];
             body[i] = (i < prizes.length) ? prizes[i] : "";
-            footer[i] = (unlocked[i] ? "Adquirida ao alcançar a pontuação "
-                                     : "Adquire-se ao alcançar a pontuação ")
-                    + milestones[i] + " em " + typeWord;
+            footer[i] = (unlocked[i] ? "Unlocked at score "
+                                     : "Unlocks at score ")
+                    + milestones[i] + " in " + typeWord;
 
             float headerH = headerFont.getCapHeight() + 6;
             float bodyH = unlocked[i]
@@ -98,7 +105,8 @@ public final class CuriositiesState implements GameState {
 
     @Override
     public void update(float delta) {
-        if (Gdx.input.isKeyJustPressed(Keys.ESCAPE) || Gdx.input.isKeyJustPressed(Keys.BACK)) {
+        if (Gdx.input.isKeyJustPressed(Keys.ESCAPE) || Gdx.input.isKeyJustPressed(Keys.BACK)
+                || backButton.clicked(painter)) {
             game.gsm().set(new AchievementsState(game));
             return;
         }
@@ -140,11 +148,12 @@ public final class CuriositiesState implements GameState {
             }
             cursor += heights[i] + GAP;
         }
+        backButton.fill(painter);   // fixed control, drawn over the scrolling cards
         painter.endShapes();
 
         // 3) Title + card text.
         painter.begin();
-        painter.textCentered(a.font(Assets.NASALIZATION, 32), "Curiosidades",
+        painter.textCentered(a.font(Assets.NASALIZATION, 32), "Curiosities",
                 Config.WORLD_WIDTH / 2f, 26f);
 
         BitmapFont headerFont = a.font(Assets.NASALIZATION, 20);
@@ -156,7 +165,7 @@ public final class CuriositiesState implements GameState {
         for (int i = 0; i < heights.length; i++) {
             if (onScreen(cursor, heights[i])) {
                 float headerH = headerFont.getCapHeight() + 6;
-                dark(headerFont, "Curiosidade #" + (i + 1), cardX + PAD, cursor + PAD, false, 0);
+                dark(headerFont, "Curiosity #" + (i + 1), cardX + PAD, cursor + PAD, false, 0);
                 float bodyTop = cursor + PAD + headerH + 8;
                 if (unlocked[i]) {
                     dark(bodyFont, body[i], cardX + PAD, bodyTop, true, textW);
@@ -170,7 +179,8 @@ public final class CuriositiesState implements GameState {
             cursor += heights[i] + GAP;
         }
 
-        painter.textCentered(a.font(Assets.DYSLEXIC, 12), "ESC / voltar  •  arraste para rolar",
+        backButton.drawLabel(painter);
+        painter.textCentered(a.font(Assets.DYSLEXIC, 12), "drag to scroll",
                 Config.WORLD_WIDTH / 2f, Config.WORLD_HEIGHT - 22f);
         painter.end();
     }

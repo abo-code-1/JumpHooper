@@ -87,9 +87,9 @@ public final class PlayState implements GameState, GameEventListener {
         float bx = (Config.WORLD_WIDTH - bw) / 2f;
         float midY = Config.WORLD_HEIGHT / 2f;
         BitmapFont btnFont = a.font(Assets.THALEAH, 24);
-        resumeButton = new Button(bx, midY - 80f, bw, bh, "Continuar", btnFont,
+        resumeButton = new Button(bx, midY - 80f, bw, bh, "Resume", btnFont,
                 Colors.YELLOW_TOP, Colors.YELLOW_BOT);
-        settingsButton = new Button(bx, midY - 12f, bw, bh, "Ajustes", btnFont,
+        settingsButton = new Button(bx, midY - 12f, bw, bh, "Settings", btnFont,
                 Colors.GRAY_TOP, Colors.GRAY_BOT);
         menuButton = new Button(bx, midY + 56f, bw, bh, "Menu", btnFont,
                 Colors.GRAY_TOP, Colors.GRAY_BOT);
@@ -303,9 +303,10 @@ public final class PlayState implements GameState, GameEventListener {
     }
 
     private void drawHud(SpriteBatch batch, float safeTop) {
-        // Lives as hearts, top-left — pushed below the notch / status region.
+        // Lives as hearts, top-left, just right of the pause button and below
+        // the notch / status region.
         batch.setColor(1f, 1f, 1f, 1f);
-        float hx = 12f, hy = 16f + safeTop, hs = 22f;
+        float hx = 12f + PAUSE_BTN_W + 10f, hy = 16f + safeTop, hs = 22f;
         for (int i = 0; i < world.getLives(); i++) {
             painter.image(a.heart, hx + i * (hs + 4f), hy, hs, hs * 0.9f);
         }
@@ -451,7 +452,7 @@ public final class PlayState implements GameState, GameEventListener {
     // --- pause -----------------------------------------------------------------
 
     private float pauseBtnX() {
-        return Config.WORLD_WIDTH / 2f - PAUSE_BTN_W / 2f;
+        return 12f; // top-left corner, clear of the centre camera / Dynamic Island
     }
 
     private boolean pauseButtonClicked() {
@@ -474,7 +475,7 @@ public final class PlayState implements GameState, GameEventListener {
         }
     }
 
-    /** Small pause button, top-centre, that freezes the run. */
+    /** Small pause button, top-left corner, that freezes the run. */
     private void drawPauseButton(float safeTop) {
         float x = pauseBtnX(), top = 12f + safeTop;
         painter.beginShapes();
@@ -498,7 +499,7 @@ public final class PlayState implements GameState, GameEventListener {
         painter.begin();
         BitmapFont title = a.font(Assets.NASALIZATION, 34);
         title.setColor(Colors.WHITE);
-        painter.textCentered(title, "Pausa",
+        painter.textCentered(title, "Paused",
                 Config.WORLD_WIDTH / 2f, Config.WORLD_HEIGHT / 2f - 150f);
         resumeButton.drawLabel(painter);
         settingsButton.drawLabel(painter);

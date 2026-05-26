@@ -36,11 +36,11 @@ public final class MenuState implements GameState {
         BitmapFont btnFont = a.font(Assets.THALEAH, 26);
 
         startButton = new Button(bx, Config.WORLD_HEIGHT - 196f, bw, bh,
-                "Iniciar", btnFont, Colors.YELLOW_TOP, Colors.YELLOW_BOT);
+                "Start", btnFont, Colors.YELLOW_TOP, Colors.YELLOW_BOT);
         achievementsButton = new Button(bx, Config.WORLD_HEIGHT - 138f, bw, bh,
-                "Conquistas", btnFont, Colors.GRAY_TOP, Colors.GRAY_BOT);
+                "Achievements", btnFont, Colors.GRAY_TOP, Colors.GRAY_BOT);
         settingsButton = new Button(bx, Config.WORLD_HEIGHT - 80f, bw, bh,
-                "Ajustes", btnFont, Colors.GRAY_TOP, Colors.GRAY_BOT);
+                "Settings", btnFont, Colors.GRAY_TOP, Colors.GRAY_BOT);
     }
 
     @Override public void enter() {}
@@ -64,17 +64,18 @@ public final class MenuState implements GameState {
     public void render(SpriteBatch batch) {
         float cx = Config.WORLD_WIDTH / 2f;
         int record = ScoreManager.INSTANCE.getRecord();
+        float safeTop = painter.safeTopInset(); // keep the logo/record clear of the camera
 
         painter.begin();
         painter.fullscreen(a.startBackground);
 
-        // Logo wordmark near the top, keeping its aspect ratio.
+        // Logo wordmark near the top, keeping its aspect ratio (pushed below the notch).
         float logoW = 240f;
         float logoH = logoW * a.logo.getHeight() / a.logo.getWidth();
-        painter.image(a.logo, cx - logoW / 2f, 36f, logoW, logoH);
+        painter.image(a.logo, cx - logoW / 2f, 36f + safeTop, logoW, logoH);
 
-        painter.textCentered(a.font(Assets.NASALIZATION, 20), "recorde", cx, 226f);
-        painter.textCentered(a.font(Assets.NASALIZATION, 48), String.valueOf(record), cx, 252f);
+        painter.textCentered(a.font(Assets.NASALIZATION, 20), "record", cx, 226f + safeTop);
+        painter.textCentered(a.font(Assets.NASALIZATION, 48), String.valueOf(record), cx, 252f + safeTop);
 
         // Decorative astronaut (original: [width/2 - 22, height/2 + 70]).
         painter.image(a.astronaut, cx - 22f, Config.WORLD_HEIGHT / 2f + 70f,

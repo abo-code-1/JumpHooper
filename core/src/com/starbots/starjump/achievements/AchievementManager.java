@@ -33,19 +33,19 @@ public final class AchievementManager implements GameEventListener {
 
         int newDistance = countUnlocked(scores.getTotalDistance());
         for (int i = distanceUnlocked; i < newDistance; i++) {
-            announce("distância", Curiosities.MILESTONES[i]);
+            announce("distance", Curiosities.MILESTONES[i]);
         }
         distanceUnlocked = newDistance;
 
         int newJumps = countUnlocked(scores.getTotalJumps());
         for (int i = jumpsUnlocked; i < newJumps; i++) {
-            announce("pulos", Curiosities.MILESTONES[i]);
+            announce("jumps", Curiosities.MILESTONES[i]);
         }
         jumpsUnlocked = newJumps;
     }
 
     private void announce(String type, int milestone) {
-        Gdx.app.log("Achievement", "Curiosidade desbloqueada em " + type + ": " + milestone);
+        Gdx.app.log("Achievement", "Curiosity unlocked in " + type + ": " + milestone);
         bus.publish(GameEventType.ACHIEVEMENT_UNLOCKED, milestone);
     }
 

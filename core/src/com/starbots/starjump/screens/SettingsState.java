@@ -69,12 +69,12 @@ public final class SettingsState implements GameState {
         axisButton = new Button(rowX, 496f, Config.WORLD_WIDTH - rowX * 2f, 44f,
                 "", wide, Colors.GRAY_TOP, Colors.GRAY_BOT);
         centerButton = new Button(rowX, 550f, (Config.WORLD_WIDTH - rowX * 2f - 12f) * 0.56f, 44f,
-                "Centralizar", wide, Colors.YELLOW_TOP, Colors.YELLOW_BOT);
+                "Center", wide, Colors.YELLOW_TOP, Colors.YELLOW_BOT);
         resetCenterButton = new Button(centerButton.x + centerButton.w + 12f, 550f,
                 (Config.WORLD_WIDTH - rowX * 2f - 12f) * 0.44f, 44f,
                 "Reset", wide, Colors.GRAY_TOP, Colors.GRAY_BOT);
         backButton = new Button(rowX, Config.WORLD_HEIGHT - 96f,
-                Config.WORLD_WIDTH - rowX * 2f, 52f, "Voltar", wide,
+                Config.WORLD_WIDTH - rowX * 2f, 52f, "Back", wide,
                 Colors.GRAY_TOP, Colors.GRAY_BOT);
     }
 
@@ -116,9 +116,9 @@ public final class SettingsState implements GameState {
     public void render(SpriteBatch batch) {
         float safeTop = painter.safeTopInset();
         layoutButtons(safeTop);
-        controlModeButton.label = "Controle: " + settings.getControlModeLabel();
-        invertButton.label = settings.isTiltInverted() ? "Direcao: invertida" : "Direcao: normal";
-        axisButton.label = "Eixo do tilt: " + settings.getTiltAxisLabel();
+        controlModeButton.label = "Control: " + settings.getControlModeLabel();
+        invertButton.label = settings.isTiltInverted() ? "Direction: inverted" : "Direction: normal";
+        axisButton.label = "Tilt axis: " + settings.getTiltAxisLabel();
 
         painter.begin();
         painter.fullscreen(a.splashBackground);
@@ -139,10 +139,10 @@ public final class SettingsState implements GameState {
         painter.endShapes();
 
         painter.begin();
-        painter.textCentered(a.font(Assets.NASALIZATION, 32), "Ajustes",
+        painter.textCentered(a.font(Assets.NASALIZATION, 32), "Settings",
                 Config.WORLD_WIDTH / 2f, 34f + safeTop);
-        drawRow("Som do jogo", percent(settings.getSfxVolume()), 144f, safeTop);
-        drawRow("Musica", percent(settings.getMusicVolume()), 224f, safeTop);
+        drawRow("Sound", percent(settings.getSfxVolume()), 144f, safeTop);
+        drawRow("Music", percent(settings.getMusicVolume()), 224f, safeTop);
         drawRow("Tilt", String.format("%.1fx", settings.getTiltSensitivity()), 304f, safeTop);
         sfxMinus.drawLabel(painter); sfxPlus.drawLabel(painter);
         musicMinus.drawLabel(painter); musicPlus.drawLabel(painter);
@@ -154,7 +154,7 @@ public final class SettingsState implements GameState {
         resetCenterButton.drawLabel(painter);
         drawSensorReadout(612f, safeTop);
         backButton.drawLabel(painter);
-        painter.textCentered(a.font(Assets.DYSLEXIC, 12), "ESC / voltar",
+        painter.textCentered(a.font(Assets.DYSLEXIC, 12), "ESC / back",
                 Config.WORLD_WIDTH / 2f, Config.WORLD_HEIGHT - 24f);
         painter.end();
     }
@@ -187,7 +187,7 @@ public final class SettingsState implements GameState {
         BitmapFont font = a.font(Assets.DYSLEXIC, 11);
         font.setColor(Colors.WHITE);
         float selected = AccelerometerTiltAdapter.rawAxis(settings.getTiltAxis());
-        String text = String.format("Sensor %s: %.2f   Centro: %.2f",
+        String text = String.format("Sensor %s: %.2f   Center: %.2f",
                 settings.getTiltAxisLabel(), selected, settings.getTiltCenter());
         painter.textCentered(font, text, Config.WORLD_WIDTH / 2f, top + safeTop);
     }

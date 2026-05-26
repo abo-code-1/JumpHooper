@@ -16,7 +16,7 @@ import com.starbots.starjump.util.Button;
 import com.starbots.starjump.util.Colors;
 import com.starbots.starjump.util.Painter;
 
-/** "Conquistas" screen: distance + jumps progress cards, each opening curiosities. */
+/** "Achievements" screen: distance + jumps progress cards, each opening curiosities. */
 public final class AchievementsState implements GameState {
 
     private final StarJumpGame game;
@@ -26,6 +26,7 @@ public final class AchievementsState implements GameState {
     private final float cardX, cardW, cardH;
     private final Button distanceButton;
     private final Button jumpsButton;
+    private final Button backButton;
 
     public AchievementsState(StarJumpGame game) {
         this.game = game;
@@ -41,16 +42,22 @@ public final class AchievementsState implements GameState {
         float bx = cardX + (cardW - bw) / 2f;
         float bh = 40f;
         distanceButton = new Button(bx, 80f + cardH - bh - 16f, bw, bh,
-                "Curiosidades", btnFont, Colors.OLIVE_TOP, Colors.OLIVE_BOT);
+                "Curiosities", btnFont, Colors.OLIVE_TOP, Colors.OLIVE_BOT);
         jumpsButton = new Button(bx, 290f + cardH - bh - 16f, bw, bh,
-                "Curiosidades", btnFont, Colors.OLIVE_TOP, Colors.OLIVE_BOT);
+                "Curiosities", btnFont, Colors.OLIVE_TOP, Colors.OLIVE_BOT);
+
+        float backW = 200f, backH = 48f;
+        backButton = new Button((Config.WORLD_WIDTH - backW) / 2f,
+                Config.WORLD_HEIGHT - 92f, backW, backH, "Back",
+                a.font(Assets.THALEAH, 22), Colors.GRAY_TOP, Colors.GRAY_BOT);
     }
 
     @Override public void enter() {}
 
     @Override
     public void update(float delta) {
-        if (Gdx.input.isKeyJustPressed(Keys.ESCAPE) || Gdx.input.isKeyJustPressed(Keys.BACK)) {
+        if (Gdx.input.isKeyJustPressed(Keys.ESCAPE) || Gdx.input.isKeyJustPressed(Keys.BACK)
+                || backButton.clicked(painter)) {
             game.gsm().set(new MenuState(game));
         } else if (distanceButton.clicked(painter)) {
             game.gsm().set(new CuriositiesState(game, CuriositiesState.Type.DISTANCE));
@@ -77,18 +84,18 @@ public final class AchievementsState implements GameState {
         painter.border(cardX, 290f, cardW, cardH, 2f, Colors.WHITE);
         distanceButton.fill(painter);
         jumpsButton.fill(painter);
+        backButton.fill(painter);
         painter.endShapes();
 
         // 3) Text + labels.
         painter.begin();
-        painter.textCentered(a.font(Assets.NASALIZATION, 32), "Conquistas",
+        painter.textCentered(a.font(Assets.NASALIZATION, 32), "Achievements",
                 Config.WORLD_WIDTH / 2f, 28f);
-        drawCardText("Distância", distance, 80f);
-        drawCardText("Pulos", jumps, 290f);
+        drawCardText("Distance", distance, 80f);
+        drawCardText("Jumps", jumps, 290f);
         distanceButton.drawLabel(painter);
         jumpsButton.drawLabel(painter);
-        painter.textCentered(a.font(Assets.DYSLEXIC, 12), "ESC / voltar",
-                Config.WORLD_WIDTH / 2f, Config.WORLD_HEIGHT - 24f);
+        backButton.drawLabel(painter);
         painter.end();
     }
 

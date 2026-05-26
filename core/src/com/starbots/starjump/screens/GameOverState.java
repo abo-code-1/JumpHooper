@@ -14,7 +14,7 @@ import com.starbots.starjump.util.Button;
 import com.starbots.starjump.util.Colors;
 import com.starbots.starjump.util.Painter;
 
-/** Game-over screen: StarBots logo, the score, an optional "new record", "Voltar". */
+/** Game-over screen: StarBots logo, the score, an optional "new record", "Back". */
 public final class GameOverState implements GameState {
 
     private final StarJumpGame game;
@@ -32,7 +32,7 @@ public final class GameOverState implements GameState {
         float bh = 56f;
         BitmapFont btnFont = a.font(Assets.THALEAH, 26);
         backButton = new Button(bx, Config.WORLD_HEIGHT - 130 - bh, bw, bh,
-                "Voltar", btnFont, Colors.GRAY_TOP, Colors.GRAY_BOT);
+                "Back", btnFont, Colors.GRAY_TOP, Colors.GRAY_BOT);
     }
 
     @Override public void enter() {}
@@ -60,13 +60,13 @@ public final class GameOverState implements GameState {
         float logoH = logoW * a.starbots.getHeight() / a.starbots.getWidth();
         painter.image(a.starbots, cx - logoW / 2f, 110f, logoW, logoH);
 
-        painter.textCentered(a.font(Assets.DYSLEXIC, 20), "pontuação obtida", cx, 330f);
+        painter.textCentered(a.font(Assets.DYSLEXIC, 20), "your score", cx, 330f);
         painter.textCentered(a.font(Assets.NASALIZATION, 46), String.valueOf(score), cx, 356f);
 
         if (newRecord) {
             BitmapFont rec = a.font(Assets.THALEAH, 32);
             rec.setColor(Colors.NEW_RECORD);
-            painter.textCentered(rec, "Novo recorde!", cx, 430f);
+            painter.textCentered(rec, "New record!", cx, 430f);
             rec.setColor(Colors.WHITE);
         }
         painter.end();

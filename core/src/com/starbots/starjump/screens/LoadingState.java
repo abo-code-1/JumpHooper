@@ -41,7 +41,7 @@ public final class LoadingState implements GameState {
         painter.fullscreen(a.splashBackground);
         painter.textCentered(a.font(Assets.NASALIZATION, 28), "Star Jump",
                 Config.WORLD_WIDTH / 2f, Config.WORLD_HEIGHT / 2f - 60);
-        painter.textCentered(a.font(Assets.DYSLEXIC, 16), "carregando...",
+        painter.textCentered(a.font(Assets.DYSLEXIC, 16), "loading...",
                 Config.WORLD_WIDTH / 2f, Config.WORLD_HEIGHT / 2f);
         painter.end();
     }
